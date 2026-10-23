@@ -4,3 +4,7 @@
 __pycache__/
 .gstack/
 .forge/design-lab/
+# forge-eng worktree（会话级隔离副本）
+.worktrees/
+# forge 运行状态（流水线状态、视觉决策索引、交付报告、Codex 作业目录；只在本机）
+.forge/
