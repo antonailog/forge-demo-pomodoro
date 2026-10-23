@@ -63,7 +63,6 @@
 |---|---|---|---|---|---|---|---|---|
 | 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | auth | P1 | pending | — | docs/bugfix/reviews/BF-0419-3.md |
 | 示例: BF-0419-4 | ASR 识别完成前按钮可连点 | forge-qa | Recorder.tsx, /api/asr | asr | P1 | qa-pass-pending-final-review | abc-123-xyz | docs/bugfix/reviews/BF-0419-4.md |
-| BF-1023-1 | 到点或点跳过切换阶段时，主按钮底色慢慢变过去，不是直接换掉 | 会话 2026-10-23 用户反馈（同 QA.md BUG-001） | style.css 主按钮过渡、app.js render() | 外观 | P2 | qa-pass-user-accepted | d5874570-aea0 | docs/bugfix/reviews/BF-1023-1.md |
 
 <!-- 新条目追加到表格末尾 -->
 <!-- 领取会话列：pending 时填 —，in-progress 及之后填 session id（8-12 位前缀足够） -->
@@ -90,6 +89,10 @@
 
 > 已 resolved 或 wontfix 的条目归档到这里。**不清理**。
 > 以后遇到类似问题时可以在这里搜索历史。
+
+### 2026-10
+
+- **BF-1023-1** 到点或点跳过切换阶段时主按钮底色慢慢变过去、不是直接换掉 — resolved 2026-10-23 → Bug 修复验收报告 [docs/archive/raw/bugfix-reviews/BF-1023-1.md](../archive/raw/bugfix-reviews/BF-1023-1.md)
 
 ### 2026-04
 
