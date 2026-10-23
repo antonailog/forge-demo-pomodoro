@@ -9,7 +9,7 @@ last_updated: 2026-10-23
 
 **版本:** v1.0
 **日期:** 2026-10-23
-**状态:** 开发中
+**状态:** 已实现，待 forge-qa 验收
 
 > 上游：产品 [PRD.md](PRD.md) v1.0、行为契约 [Feature Spec](../.features/pomodoro-timer/feature-spec.md)、设计 [DESIGN.md](DESIGN.md) v1.0、本轮灰区默认 [v1.0-CONTEXT.md](v1.0-CONTEXT.md)、技术调研 [v1.0-RESEARCH.md](v1.0-RESEARCH.md)。下游：forge-qa 用 §七 测试矩阵。
 
@@ -232,14 +232,16 @@ now ≥ endAt（前台或后台，后台可能被浏览器推迟）
 
 | # | 文件 | 操作 | 内容 | 依赖 | 状态 |
 |---|---|---|---|---|---|
-| 1 | `tests/timer-core.test.js` | 新增 | 规则单测（§七 U 组），先写、先看到失败 | - | ⬜ |
-| 2 | `timer-core.js` | 新增 | 纯规则（§三.1、§三.2） | #1 | ⬜ |
-| 3 | `app.js` | 新增 | 存储、恢复、走秒、渲染、按钮、多页面、存储降级（§三.3 除提醒两行） | #2 | ⬜ |
-| 4 | `index.html` | 修改 | 末尾依次加 `timer-core.js`、`app.js` 两个 `defer` 脚本 | #3 | ⬜ |
-| 5 | `app.js` | 修改 | 到点提醒：提示音合成与解锁、点击 / 按键确认 | #3 | ⬜ |
-| 6 | `docs/modules/番茄钟.md` 及配图 | 修改 | 需求设计文档：页面图换成真实页面截图，阶段改为已实现 | #5 | ⬜ |
+| 1 | `tests/timer-core.test.js` | 新增 | 规则单测（§七 U 组），先写、先看到失败 | - | ✅ |
+| 2 | `timer-core.js` | 新增 | 纯规则（§三.1、§三.2） | #1 | ✅ |
+| 3 | `app.js` | 新增 | 存储、恢复、走秒、渲染、按钮、多页面、存储降级（§三.3 除提醒两行） | #2 | ✅ |
+| 4 | `index.html` | 修改 | 末尾依次加 `timer-core.js`、`app.js` 两个 `defer` 脚本 | #3 | ✅ |
+| 5 | `app.js` | 修改 | 到点提醒：提示音合成与解锁、点击 / 按键确认 | #3 | ✅ |
+| 6 | `docs/modules/番茄钟.md` 及配图 | 修改 | 需求设计文档：页面图换成真实页面截图，阶段改为已实现 | #5 | ✅ |
 
 状态标记：⬜ 未开始 / 🔧 进行中 / ✅ 已完成
+
+派活记录（codex-delegate，Codex 作业目录在本机 `.forge/jobs/`，不进仓库）：#1–#2 作业 `20261023-011643-T01`，#3–#4 作业 `20261023-013051-T02`，#5 作业 `20261023-014102-T03`，三份都是一轮验收通过、无返工；#6 由 Claude 经 forge-feature-doc 完成。
 
 ---
 
@@ -298,6 +300,8 @@ now ≥ endAt（前台或后台，后台可能被浏览器推迟）
 | M2 | 电脑睡眠唤醒 | M | 进行中合盖再打开 | 立即显示真实剩余时间或立即结算 | R1 边界 |
 | M3 | 手机锁屏 / 切出 | M | 真机 | 不承诺提醒；回到页面立即结算或按 R5 恢复 | R6 |
 
+**forge-eng 自验范围**：U 组全部自动化；E1–E16 已由 forge-eng 用本机 Playwright 逐条自验通过（自验脚本不进仓库），forge-qa 仍需按验收检查表独立执行；M1–M3 只能真实等待或真机，forge-eng 未测。
+
 **给 forge-qa 的测法提示**（不需要页面里的测试钩子）：
 
 - 快进时间：Playwright `page.clock.install({ time })` 后用 `runFor` / `fastForward`，页面里的 `Date.now()` 与 `setInterval` 一起被接管。
@@ -336,3 +340,5 @@ now ≥ endAt（前台或后台，后台可能被浏览器推迟）
 | 页面层（`app.js`）的自动化单测 | 不引入 DOM 测试依赖（CONTEXT G3）；页面行为由 forge-qa 用浏览器实测 |
 | 提示音音色回填 DESIGN.md | DESIGN「待优化」中列了此项；本版参数记在 §三.3，回填由 forge-design 负责 |
 | 暗色模式、自定义时长、静音开关、快捷键、系统通知等 | Feature Spec 第六节非目标 / DESIGN 待优化 |
+| 到点切换阶段时主按钮底色有约 0.12 秒过渡（DESIGN §5.1 写「直接切换」） | 来自 `style.css` 给悬停用的 `background-color` 过渡，阶段切换也会触发；肉眼几乎不可见，已列入需求设计文档待拍板，改法归 forge-design-impl |
+| `app.js` 对 DOM 写入、事件绑定也包了 `try/catch` | 冗余但不吞规则错误（`view()` 在 `try` 外）；留给 forge-review 决定是否精简 |
