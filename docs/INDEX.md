@@ -13,3 +13,4 @@ last_updated: 2026-10-23
 | docs/PRD.md | prd | global | 2026-10-23 |
 | docs/PRD-CHANGELOG.md | changelog | global | 2026-10-23 |
 | .features/pomodoro-timer/feature-spec.md | prd | 番茄钟 | 2026-10-23 |
+| docs/modules/番茄钟.md | reference | 番茄钟 | 2026-10-23 |
