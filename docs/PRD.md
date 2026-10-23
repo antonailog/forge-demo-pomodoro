@@ -9,7 +9,7 @@ last_updated: 2026-10-23
 
 **版本:** v1.0
 **日期:** 2026-10-23
-**状态:** 需求已确认，待设计
+**状态:** 已实现，v1.0 已合进主分支（[PR #1](https://github.com/antonailog/forge-demo-pomodoro/pull/1)，未部署）
 
 ---
 

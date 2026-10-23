@@ -10,6 +10,7 @@ last_updated: 2026-10-23
 | 文档 | 用途 |
 |---|---|
 | [INDEX.md](INDEX.md) | 当前 live 文档索引 |
+| [CHANGELOG.md](CHANGELOG.md) | 版本记录（历史总账，每个版本一条） |
 | [PRD.md](PRD.md) | 产品当前真相源（由 /forge-prd 创建） |
 | [PRD-CHANGELOG.md](PRD-CHANGELOG.md) | PRD 变更日志 |
 | [modules/番茄钟.md](<modules/番茄钟.md>) | 番茄钟需求设计文档（给人看，先看这份） |
