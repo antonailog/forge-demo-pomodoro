@@ -18,7 +18,8 @@ last_updated: 2026-10-23
 | [设计工作台](assets/visuals/pomodoro/2026-10-23-skeleton-v1.0.html) | 番茄钟页面的真比例骨架，可改值、可保存（forge-design-lab） |
 | [v1.0-CONTEXT.md](v1.0-CONTEXT.md) | v1.0 开发上下文摘要（forge-dev，迭代结项后归档） |
 | [v1.0-RESEARCH.md](v1.0-RESEARCH.md) | v1.0 技术调研（forge-dev，迭代结项后归档） |
-| ENGINEERING.md | 工程当前真相源（由 /forge-eng 创建） |
+| [ENGINEERING.md](ENGINEERING.md) | 工程当前真相源（架构、数据流、本机记录格式、测试矩阵；给 AI 看） |
+| [ENGINEERING-CHANGELOG.md](ENGINEERING-CHANGELOG.md) | 工程变更日志 |
 | QA.md | 当前验收手册（由 /forge-qa 创建） |
 | [bugfix/backlog.md](bugfix/backlog.md) | Bug 任务池 |
 

@@ -16,5 +16,7 @@ last_updated: 2026-10-23
 | docs/modules/番茄钟.md | reference | 番茄钟 | 2026-10-23 |
 | docs/DESIGN.md | design | global | 2026-10-23 |
 | docs/DESIGN-CHANGELOG.md | changelog | global | 2026-10-23 |
+| docs/ENGINEERING.md | engineering | global | 2026-10-23 |
+| docs/ENGINEERING-CHANGELOG.md | changelog | global | 2026-10-23 |
 | docs/v1.0-CONTEXT.md | plan | 番茄钟 | 2026-10-23 |
 | docs/v1.0-RESEARCH.md | research | 番茄钟 | 2026-10-23 |
