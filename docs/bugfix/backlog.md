@@ -1,0 +1,113 @@
+<!--
+使用说明（给 AI 看）：
+
+这是项目级别的 bug 任务池。复制到项目根 docs/bugfix/backlog.md。
+每个项目一份，跨会话持久。
+
+写入来源：
+1. forge-bugfix 的 P2 范围推荐时，把"推迟到下次"的 bug 写入"🐛 待修 bug"
+2. forge-bugfix 的 P7 用户验收为 "Pass + 新发现" 时，把新发现分流写入此处
+3. 用户在会话中临时报告的 bug（但不想当场修）也写入此处
+
+读取来源：
+1. 新会话启动 forge-bugfix 时，P2 主动读此处推荐候选
+2. 用户说"看一下待修 bug"时读此处
+3. forge-qa 在功能开发后的 QA 自动闭环模式中，把发现的问题登记到此处
+
+编号规则：
+- 每条 bug 编号 BF-{MMDD}-{N}，N 在该日期递增
+- 编号一旦分配，即使条目被删除也不复用
+- 每个 BF 编号处理时必须有对应的活跃 Bug 修复验收报告：docs/bugfix/reviews/BF-{MMDD}-{N}.md
+- 结案后报告归档到 docs/archive/raw/bugfix-reviews/BF-{MMDD}-{N}.md，backlog 已处理区链接应指向归档路径
+
+优先级规则：
+- P0：阻塞核心流程、高频出现、涉及安全或数据
+- P1：影响体验但有 workaround、中频
+- P2：小瑕疵、低频、非关键路径
+- AI 新建条目时初步判断，用户可随时改
+
+状态规则：
+- pending：待修
+- in-progress：正在某个 worktree 修（必须同时在 .forge/active.md 登记）
+- fixed-awaiting-qa：代码已修并提交，等待 forge-qa 回归
+- qa-failed：forge-qa 回归失败，需回到 bugfix
+- qa-pass-pending-final-review：自动 QA 已通过，等待最终人工验收
+- blocked-human：自动闭环遇到需求/设计/环境/根因疑问，等待用户判断
+- deferred：确认延期，不进入当前批次
+- resolved：已修复（移到"🗄️ 已处理"区，永久保留）
+- wontfix：决定不修（移到"🗄️ 已处理"区，永久保留）
+
+功能域规则（v6.0 新增，用于并行判重）：
+- 功能域标签从 .forge/active.md 的"功能域声明"区选取，AI 不自创
+- 单域：`asr`；多域（重构型）：`asr,player`（逗号分隔，无空格）
+- P2 推荐时同域合并会话、不同域鼓励并行；任一域冲突即判冲突
+- 没有 .forge/active.md 的项目需要先建立功能域清单
+
+领取会话（in-progress 时必填）：
+- 值为 Claude Code 的 session id（通过 skills/forge-bugfix/scripts/get-session-id.sh 获取）
+- 同时在项目根 .forge/active.md 追加一行心跳记录
+- 修复合并后由 forge-fupan 或 /forge-status 清理 active.md
+
+已处理区**永久保留**，不要清理。用于以后定位问题时回溯历史。
+-->
+
+# Bug Backlog
+
+> 本项目的 bug 任务池。forge-bugfix 启动时从此处捞候选。
+> 新发现的 bug 会自动分流到此处。
+> 每个 BF 条目都对应一份 Bug 修复验收报告；backlog 只做索引和状态看板。
+
+## 🐛 待修 bug
+
+| 编号 | 描述 | 来源 | 上下文 | 功能域 | 优先级 | 状态 | 领取会话 | 报告 |
+|---|---|---|---|---|---|---|---|---|
+| 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | auth | P1 | pending | — | docs/bugfix/reviews/BF-0419-3.md |
+| 示例: BF-0419-4 | ASR 识别完成前按钮可连点 | forge-qa | Recorder.tsx, /api/asr | asr | P1 | qa-pass-pending-final-review | abc-123-xyz | docs/bugfix/reviews/BF-0419-4.md |
+
+<!-- 新条目追加到表格末尾 -->
+<!-- 领取会话列：pending 时填 —，in-progress 及之后填 session id（8-12 位前缀足够） -->
+
+## 🌀 待澄清反馈
+
+> 不确定是 bug 还是期望差异，或者现象还说不清的反馈。
+> 下次遇到复现机会时拉出来验证，再决定是迁到待修 bug 还是删除。
+
+- [2026-04-19] 示例：翻页时感觉"卡了一下"，未复现
+
+<!-- 新条目追加到列表末尾 -->
+
+## 💡 新需求（待立项）
+
+> 用户在 bug 修复过程中反馈的新需求。
+> 不在本文档里做，只是登记等用户决定什么时候走 `/forge-prd` 立项。
+
+| 编号 | 描述 | 来源 | 登记日期 | 状态 |
+|---|---|---|---|---|
+| 示例: N-0419-1 | 希望登录页加"记住我"选项 | BF-0419-2 验收时反馈 | 2026-04-19 | 待立项 |
+
+## 🗄️ 已处理（永久保留，用于历史回溯）
+
+> 已 resolved 或 wontfix 的条目归档到这里。**不清理**。
+> 以后遇到类似问题时可以在这里搜索历史。
+
+### 2026-04
+
+<!-- 按月分节。归档时追加到对应月份。-->
+<!-- 格式：编号 | 描述 | 状态 | 处理日期 | 链接 -->
+<!-- 示例：-->
+<!-- - **BF-0419-3** 登录头像不刷新 — resolved 2026-04-20 → Bug 修复验收报告 docs/archive/raw/bugfix-reviews/BF-0419-3.md -->
+<!-- - **N-0419-1** 登录页"记住我" — 已通过 /forge-prd 立项为 feature-remember-me -->
+
+---
+
+## 快速操作提示
+
+- 新建 bug 条目：追加到"🐛 待修 bug"表末尾，分配 BF-{MMDD}-{N} 编号
+- 新建或领取 bug：同步创建 `docs/bugfix/reviews/{BUG_ID}.md` 活跃 Bug 修复验收报告
+- 开始修某个 bug：把该行 `状态` 改成 `in-progress`，记录领取会话
+- 修完代码：状态改 `fixed-awaiting-qa`
+- QA 失败：状态改 `qa-failed`，回到 bugfix
+- QA 通过但等待批次最终人工验收：状态改 `qa-pass-pending-final-review`
+- 遇到需要用户判断的问题：状态改 `blocked-human`，在报告里写决策卡
+- 用户最终验收通过且修复合并后：把 BF 报告归档到 `docs/archive/raw/bugfix-reviews/`，再把行从"🐛 待修 bug"剪切到"🗄️ 已处理"的对应月份下，附归档报告链接
+- 新需求走立项：把行从"💡 新需求"剪切到"🗄️ 已处理"，附对应 feature 链接
