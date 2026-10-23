@@ -1,0 +1,51 @@
+/* 由 docs/assets/visuals/pomodoro/pomodoro.tokens.json 生成（工作台「保存」或 build_tokens.py），勿手改。
+ * 番茄钟 · 设计工作台 v1.0 页面级与组件级 token。站点基础 token 只引用 var(--…)，值在站点全局样式。
+ * 工作台与前端组件读的是同一个文件。 */
+:root{
+  --pomo-col-max: 480px; /* 内容列最大宽 */
+  --pomo-lift: 48px; /* 计时块上移量（光学居中） */
+  --pomo-foot-h: 64px; /* 底部提示区高度 */
+  --pomo-gutter: 24px; /* 左右安全边距 */
+  --pomo-mob-bp: 600px; /* 手机布局断点（窗口窄于它切手机字号） */
+  --pomo-short-bp: 480px; /* 矮屏阈值（窗口矮于它也换手机字号、取消上移；0 = 不启用） */
+  --pomo-time-size: 128px; /* 剩余时间字号（桌面） */
+  --pomo-time-size-mob: 80px; /* 剩余时间字号（手机 / 矮屏） */
+  --pomo-time-weight: 300; /* 剩余时间字重 */
+  --pomo-time-lh: 1; /* 剩余时间行高 */
+  --pomo-phase-size: 18px; /* 阶段标签字号 */
+  --pomo-phase-weight: 500; /* 阶段标签字重 */
+  --pomo-status-size: 16px; /* 状态说明字号 */
+  --pomo-btn-size: 16px; /* 按钮字号 */
+  --pomo-btn-weight: 500; /* 主按钮字重 */
+  --pomo-rec-size: 16px; /* 今日完成数字号 */
+  --pomo-rec-num-weight: 600; /* 完成数里数字的字重 */
+  --pomo-notice-size: 14px; /* 存储提示字号 */
+  --pomo-label-lh: 1.5; /* 小字行高（阶段、状态、完成数、提示） */
+  --pomo-time-color: var(--foreground); /* 剩余时间颜色 */
+  --pomo-phase-focus: var(--focus); /* 阶段标签·专注 */
+  --pomo-phase-break: var(--break); /* 阶段标签·休息 */
+  --pomo-status-color: var(--muted-foreground); /* 状态说明颜色 */
+  --pomo-btn-bg-focus: var(--focus); /* 主按钮底色·专注 */
+  --pomo-btn-bg-focus-hover: var(--focus-strong); /* 主按钮底色·专注·悬停/按下 */
+  --pomo-btn-bg-break: var(--break); /* 主按钮底色·休息 */
+  --pomo-btn-bg-break-hover: var(--break-strong); /* 主按钮底色·休息·悬停/按下 */
+  --pomo-btn-fg: var(--on-accent); /* 主按钮文字 */
+  --pomo-skip-color: var(--muted-foreground); /* 跳过按钮文字 */
+  --pomo-skip-hover-bg: var(--surface); /* 跳过按钮悬停底色 */
+  --pomo-rec-color: var(--muted-foreground); /* 完成数文字 */
+  --pomo-rec-num-color: var(--foreground); /* 完成数里的数字 */
+  --pomo-notice-color: var(--warning); /* 存储提示文字 */
+  --pomo-ring-color: var(--foreground); /* 键盘焦点框颜色 */
+  --pomo-phase-gap: 8px; /* 阶段标签 → 剩余时间 */
+  --pomo-status-gap: 8px; /* 剩余时间 → 状态说明 */
+  --pomo-ctl-gap: 32px; /* 计时区 → 按钮 */
+  --pomo-btn-gap: 16px; /* 两个按钮之间 */
+  --pomo-btn-h: 48px; /* 按钮高度（手指好点） */
+  --pomo-btn-px: 32px; /* 主按钮左右内距 */
+  --pomo-skip-px: 16px; /* 跳过按钮左右内距 */
+  --pomo-btn-radius: 8px; /* 按钮圆角 */
+  --pomo-rec-gap: 48px; /* 按钮 → 今日完成数 */
+  --pomo-ring-w: 2px; /* 键盘焦点框粗细 */
+  --pomo-ring-offset: 2px; /* 焦点框离按钮的距离 */
+  --pomo-btn-ms: 120ms; /* 按钮悬停变色时长（全页唯一的过渡） */
+}

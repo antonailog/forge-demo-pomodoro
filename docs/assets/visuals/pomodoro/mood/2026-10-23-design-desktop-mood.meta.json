@@ -1,0 +1,9 @@
+{
+  "type": "Image 2 气质稿",
+  "generator": "codex 内置 image_gen",
+  "created": "2026-10-23",
+  "prompt": "2026-10-23-design-desktop-mood.prompt.md",
+  "decision": "「纸面安静」方向在桌面浏览器上是否够安静、够专注；只判气质，不判比例",
+  "status": "confirmed",
+  "next": "比例、密度以 forge-design-lab 工作台为准；实现后用真实截图替换"
+}

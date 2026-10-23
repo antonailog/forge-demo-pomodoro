@@ -1,0 +1,80 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-23",
+ "repo": "forge-demo-pomodoro",
+ "page": "pomodoro",
+ "prefix": "--pomo",
+ "sources": {
+  "primaryCss": null,
+  "cssFiles": [],
+  "tailwindConfigs": [],
+  "htmlWithFonts": []
+ },
+ "vars": {
+  "light": {},
+  "dark": {},
+  "kinds": {}
+ },
+ "foundation": {
+  "light": {},
+  "dark": {}
+ },
+ "fonts": {
+  "roles": {},
+  "google": [],
+  "selfHosted": [],
+  "fontFaceCount": 0
+ },
+ "sizes": {},
+ "tailwind": {},
+ "scale": {
+  "px": [
+   12,
+   13,
+   14,
+   16,
+   18,
+   20,
+   24
+  ],
+  "space": [
+   4,
+   8,
+   12,
+   16,
+   24,
+   32
+  ],
+  "radius": [
+   4,
+   8
+  ],
+  "lh": [
+   1.4,
+   1.5,
+   1.6
+  ],
+  "weight": [
+   400,
+   500,
+   600,
+   700
+  ]
+ },
+ "usage": {
+  "px": {},
+  "space": {},
+  "radius": {},
+  "lh": {},
+  "weight": {}
+ },
+ "suggestedCssOut": "pomodoro.tokens.css",
+ "warnings": [
+  "阶梯 px 没有统计到足够用量，先用默认 [12, 13, 14, 16, 18, 20, 24]，请人工确认",
+  "阶梯 space 没有统计到足够用量，先用默认 [4, 8, 12, 16, 24, 32]，请人工确认",
+  "阶梯 radius 没有统计到足够用量，先用默认 [4, 8]，请人工确认",
+  "阶梯 lh 没有统计到足够用量，先用默认 [1.4, 1.5, 1.6]，请人工确认",
+  "阶梯 weight 没有统计到足够用量，先用默认 [400, 500, 600, 700]，请人工确认"
+ ],
+ "templateSource": null
+}

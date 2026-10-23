@@ -1,0 +1,39 @@
+{
+  "type": "forge-design-lab page pack (engine + page)",
+  "page": "pomodoro",
+  "version": "v1.0",
+  "created": "2026-10-23",
+  "status": "confirmed",
+  "single_source": {
+    "spec": "docs/assets/visuals/pomodoro/pomodoro.tokens.json",
+    "js": "docs/assets/visuals/pomodoro/pomodoro.tokens.js",
+    "css": "pomodoro.tokens.css",
+    "guarantee": "本页 <link> 的就是前端 import 的 css；组件 CSS 只写 var(--pomo-*)；verify_pack.mjs 做同源与字面值检查"
+  },
+  "engine": "docs/assets/visuals/_workbench（母本：forge-design-lab/assets/workbench）",
+  "sample_content": "真实文案：Feature Spec 里的阶段、按钮、状态说明、标签页标题与存储提示原文；数字为示例（剩余时间、完成数）",
+  "next": [
+    "实现：forge-design-impl / forge-eng 引入 pomodoro.tokens.css，组件只写 var()",
+    "实现后：compare_impl.mjs 比对骨架与真实页面；需求设计文档的页面图换成真实截图"
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "result": "73 个节点通过、1 个拿不准（t.time-size-mob：手机横屏溢出）；反馈 2 条"
+    },
+    {
+      "round": 2,
+      "result": "新增 s.short-bp 出 A/B/C，选 B（0→480）；全部节点有结局"
+    }
+  ],
+  "verify": "verify_pack.mjs：PASS 14 · WARN 0 · FAIL 0；build_tokens.py --check 同源",
+  "handoff": {
+    "design_md": "docs/DESIGN.md §3.1（render_design_table.py 生成区块）",
+    "css": "pomodoro.tokens.css（根目录，页面 import）",
+    "impl_check": "tokens.json implCheck：实现后跑 compare_impl.mjs"
+  },
+  "notes": [
+    "线框层顶层区域会被引擎的 [data-id]{position:relative} 压成相对定位，本页组件 CSS 里拉回绝对定位",
+    "模板的按钮重置写成 #frame button 会吃掉边框规则，本页改成 :where(#frame button)"
+  ]
+}

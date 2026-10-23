@@ -13,7 +13,9 @@ last_updated: 2026-10-23
 | [PRD.md](PRD.md) | 产品当前真相源（由 /forge-prd 创建） |
 | [PRD-CHANGELOG.md](PRD-CHANGELOG.md) | PRD 变更日志 |
 | [modules/番茄钟.md](<modules/番茄钟.md>) | 番茄钟需求设计文档（给人看，先看这份） |
-| DESIGN.md | 设计当前真相源（由 /forge-design 创建，前端项目） |
+| [DESIGN.md](DESIGN.md) | 设计当前真相源（颜色、字号、间距、组件状态；给 AI 看） |
+| [DESIGN-CHANGELOG.md](DESIGN-CHANGELOG.md) | 设计变更日志 |
+| [设计工作台](assets/visuals/pomodoro/2026-10-23-skeleton-v1.0.html) | 番茄钟页面的真比例骨架，可改值、可保存（forge-design-lab） |
 | ENGINEERING.md | 工程当前真相源（由 /forge-eng 创建） |
 | QA.md | 当前验收手册（由 /forge-qa 创建） |
 | [bugfix/backlog.md](bugfix/backlog.md) | Bug 任务池 |

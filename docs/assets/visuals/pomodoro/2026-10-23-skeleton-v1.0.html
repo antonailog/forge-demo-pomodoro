@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>番茄钟 · 设计工作台</title>
+<!--
+  forge-design-lab 页面包 · 引擎在 ../_workbench/workbench.{js,css}（母本：forge-design-lab/assets/workbench）
+  同源三件：docs/assets/visuals/pomodoro/pomodoro.tokens.json（决策树）→ pomodoro.tokens.js（本页加载）+ pomodoro.tokens.css（前端 import，本页 <link> 的正是它）
+  本文件只含：站点基础 token 复刻（只读）、骨架片段、组件 CSS（只写 var(--pomo-*) 与站点 token）、样例数据、WB.init 的页面钩子。
+-->
+<!-- 项目未用 Google Fonts；如产品自托管字体，骨架用系统回退，面板会标「字体 ✗ 回退」 -->
+<link rel="stylesheet" href="../_workbench/workbench.css">
+<link id="tokcss" rel="stylesheet" href="../../../../pomodoro.tokens.css">
+<script src="pomodoro.tokens.js"></script>
+<style>
+/* @lab:site-tokens 站点基础 token 复刻（只读；前端里由站点全局样式提供） */
+:root{--background:#FAF8F4;--surface:#F2EFE9;--foreground:#22201C;--muted-foreground:#5F5A52;--border:#DDD8CF;--focus:#A3412D;--focus-strong:#8A3524;--break:#3B6870;
+  --break-strong:#30575E;--on-accent:#FAF8F4;--warning:#85561A;--destructive:#A12B2B;--success:#3D6A47;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+html.dark{}  /* 本版只做浅色，见 DESIGN.md「已知设计问题」 */
+
+/* @lab:component 组件 CSS：只写 var(--pomo-*) 与站点 token。字面像素值要么改成 token，要么行尾加 fixed 注释说明为什么固定；
+   站点组件的整段复刻用 @lab:fixed-start / @lab:fixed-end 注释包起来。 */
+#frame{background:var(--background);color:var(--foreground);line-height:1.5}
+:where(#frame *){margin:0;padding:0;box-sizing:border-box}
+/* 模板原写 #frame button{…border:0}，ID 特异度会吃掉按钮的边框规则（pitfalls #16），改成 :where */
+:where(#frame button){font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+/* 线框顶层区域被引擎的 #frame [data-id]{position:relative} 压成相对定位（pitfalls #3 在线框层自己身上复现），这里拉回绝对定位 */
+#frame .lvl.wire > .wire-r{position:absolute}
+.lvl{display:none}
+#frame[data-level=wire] .wire,#frame[data-level=page] .page,#frame[data-level=module] .module{display:block}
+.st{display:none}
+#frame[data-state=running] .st.running{display:block}
+#frame[data-state=idle] .st.idle{display:block}
+#frame[data-state=paused] .st.paused{display:block}
+#frame[data-state=ended] .st.ended{display:block}
+#frame[data-state=break] .st.break{display:block}
+
+/* ===== 页面框架 ===== */
+#frame .page{position:absolute;inset:0;font-family:var(--font-sans)}
+#frame .pcol{position:absolute;left:0;right:0;top:0;bottom:var(--pomo-foot-h);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 var(--pomo-gutter) var(--pomo-lift)}
+#frame.short .pcol{padding-bottom:0}
+#frame .pfoot{position:absolute;left:0;right:0;bottom:0;height:var(--pomo-foot-h);display:flex;align-items:center;justify-content:center;padding:0 var(--pomo-gutter)}
+
+/* ===== 计时区 A ===== */
+#frame .ptimer{display:flex;flex-direction:column;align-items:center;text-align:center}
+#frame .pphase{font-size:var(--pomo-phase-size);font-weight:var(--pomo-phase-weight);line-height:var(--pomo-label-lh);color:var(--pomo-phase-focus);margin-bottom:var(--pomo-phase-gap)}
+#frame[data-state=ended] .pphase,#frame[data-state=break] .pphase{color:var(--pomo-phase-break)}
+#frame .ptime{font-size:var(--pomo-time-size);font-weight:var(--pomo-time-weight);line-height:var(--pomo-time-lh);color:var(--pomo-time-color);font-variant-numeric:tabular-nums;white-space:nowrap}
+#frame.mob .ptime,#frame.short .ptime{font-size:var(--pomo-time-size-mob)}
+#frame .pstatus{min-height:calc(var(--pomo-status-size) * var(--pomo-label-lh));margin-top:var(--pomo-status-gap);font-size:var(--pomo-status-size);line-height:var(--pomo-label-lh);color:var(--pomo-status-color)}
+
+/* ===== 控制区 B ===== */
+#frame .pctl{display:flex;align-items:center;justify-content:center;gap:var(--pomo-btn-gap);width:100%;max-width:var(--pomo-col-max);margin-top:var(--pomo-ctl-gap)}
+#frame.mob.stackmob .pctl{flex-direction:column;align-items:stretch}
+#frame .pbtn{height:var(--pomo-btn-h);padding:0 var(--pomo-btn-px);border-radius:var(--pomo-btn-radius);background:var(--pomo-btn-bg-focus);color:var(--pomo-btn-fg);font-size:var(--pomo-btn-size);font-weight:var(--pomo-btn-weight);transition:background-color var(--pomo-btn-ms) ease-out}
+#frame .pbtn:hover,#frame .pbtn.is-hover{background:var(--pomo-btn-bg-focus-hover)}
+#frame[data-state=ended] .pbtn,#frame[data-state=break] .pbtn{background:var(--pomo-btn-bg-break)}
+#frame[data-state=ended] .pbtn:hover,#frame[data-state=break] .pbtn:hover,#frame[data-state=ended] .pbtn.is-hover,#frame[data-state=break] .pbtn.is-hover{background:var(--pomo-btn-bg-break-hover)}
+#frame.inkbtn .pbtn,#frame.inkbtn[data-state] .pbtn{background:var(--foreground)}
+#frame .pskip{height:var(--pomo-btn-h);padding:0 var(--pomo-skip-px);border-radius:var(--pomo-btn-radius);color:var(--pomo-skip-color);font-size:var(--pomo-btn-size);transition:background-color var(--pomo-btn-ms) ease-out}
+#frame .pskip:hover,#frame .pskip.is-hover{background:var(--pomo-skip-hover-bg);color:var(--foreground)}
+#frame .pbtn:focus-visible,#frame .pskip:focus-visible,#frame .is-focus{outline:var(--pomo-ring-w) solid var(--pomo-ring-color);outline-offset:var(--pomo-ring-offset)}
+@media (prefers-reduced-motion: reduce){#frame .pbtn,#frame .pskip{transition:none}}
+
+/* ===== 记录区 C 与存储提示 D ===== */
+#frame .prec{margin-top:var(--pomo-rec-gap);font-size:var(--pomo-rec-size);line-height:var(--pomo-label-lh);color:var(--pomo-rec-color)}
+#frame .prec b{color:var(--pomo-rec-num-color);font-weight:var(--pomo-rec-num-weight);font-variant-numeric:tabular-nums}
+#frame .pnotice{display:none;font-size:var(--pomo-notice-size);line-height:var(--pomo-label-lh);color:var(--pomo-notice-color);text-align:center}
+#frame.nosave .pnotice{display:block}
+
+/* ===== 模块放大层：浏览器标签条是浏览器自己的外观，不是本产品的样式，整段固定 ===== */
+/* @lab:fixed-start */
+#frame .module{position:absolute;inset:0;padding:40px 56px;font-family:var(--font-sans);overflow:auto}
+#frame .mh{font-size:15px;font-weight:600;margin:0 0 6px}
+#frame .mnote{font-size:13px;color:var(--muted-foreground);margin:0 0 16px}
+#frame .mtabs{display:flex;gap:2px;background:#DEE1E6;padding:8px 8px 0;border-radius:8px 8px 0 0;margin-bottom:40px;width:max-content}
+#frame .mtab{width:104px;height:32px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:8px 8px 0 0;background:#E8EAED;font-size:12px;color:#3C4043;white-space:nowrap;overflow:hidden}
+#frame .mtab.on{background:#fff}
+#frame .mtab i{flex:none;width:14px;height:14px;border-radius:3px;background:#BDC1C6}
+#frame .mtab.on i{background:var(--focus)}
+#frame .mtab span{overflow:hidden;text-overflow:clip}
+#frame .mrow{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap}
+#frame .mcell{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+#frame .mcell figcaption{font-size:12px;color:var(--muted-foreground)}
+#frame .mcell .mpair{display:flex;gap:12px}
+#frame .mtitles{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;font-size:13px;margin-top:-24px;margin-bottom:36px}
+#frame .mtitles code{font-family:ui-monospace,Menlo,monospace;background:var(--surface);padding:1px 6px;border-radius:4px}
+/* @lab:fixed-end */
+</style>
+</head>
+<body>
+
+<div id="frame">
+  <div class="lvl wire"></div>  <!-- 引擎按 layout 自动画 -->
+  <div class="lvl page">
+    <div class="pcol">
+      <section class="ptimer" data-id="A">
+        <div class="pphase" data-id="A1">专注</div>
+        <div class="ptime" data-id="A2"><span class="ptn">24:59</span></div>
+        <div class="pstatus" data-id="A3"></div>
+      </section>
+      <div class="pctl" data-id="B">
+        <button class="pbtn" data-id="B1">暂停</button>
+        <button class="pskip" data-id="B2">跳过</button>
+      </div>
+      <p class="prec" data-id="C"><span data-id="C1" data-id-inline>今天完成 <b>3</b> 个</span></p>
+    </div>
+    <div class="pfoot" data-id="D"><p class="pnotice">这个浏览器不能保存记录，刷新后今天的完成数会清零</p></div>
+  </div>
+  <div class="lvl module">
+    <h3 class="mh">E 浏览器标签页标题（页面外，人不看页面时的主要信息出口）</h3>
+    <p class="mnote">标签很多、被挤窄时，只露出标题开头几个字；所以剩余时间放最前面。</p>
+    <div class="mtabs" data-id="E">
+      <div class="mtab"><i></i><span>收件箱 - 邮件</span></div>
+      <div class="mtab"><i></i><span>周报草稿 - 文档</span></div>
+      <div class="mtab on"><i></i><span class="mtt">24:59 · 专注</span></div>
+      <div class="mtab"><i></i><span>需求评审 - 会议</span></div>
+      <div class="mtab"><i></i><span>代码仓库</span></div>
+    </div>
+    <div class="mtitles">
+      <span>进行中</span><span><code>24:59 · 专注</code>　<code>04:59 · 休息</code></span>
+      <span>已暂停</span><span><code>12:34 · 已暂停</code></span>
+      <span>待开始</span><span><code>番茄钟 · 今天 3 个</code></span>
+      <span>到点后</span><span><code>专注结束！</code> 与 <code>番茄钟 · 今天 4 个</code> 交替，直到在页面上点一下或按个键</span>
+    </div>
+    <h3 class="mh">F 按钮状态特写</h3>
+    <p class="mnote">本页没有「不可用」和「加载中」的按钮：两个按钮任何时候都能点。</p>
+    <div class="mrow">
+      <figure class="mcell" data-id="F1"><button class="pbtn">开始</button><figcaption>F1 主按钮 · 默认</figcaption></figure>
+      <figure class="mcell" data-id="F2"><button class="pbtn is-hover">开始</button><figcaption>F2 主按钮 · 悬停 / 按下</figcaption></figure>
+      <figure class="mcell" data-id="F3"><button class="pbtn is-focus">开始</button><figcaption>F3 主按钮 · 键盘焦点</figcaption></figure>
+      <figure class="mcell" data-id="F4"><div class="mpair"><button class="pskip">跳过</button><button class="pskip is-hover">跳过</button><button class="pskip is-focus">跳过</button></div><figcaption>F4 跳过 · 默认 / 悬停 / 键盘焦点</figcaption></figure>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="sampleData">
+{
+ "running": {"phase": "专注", "time": "24:59", "status": "", "btn": "暂停", "count": 3, "title": "24:59 · 专注"},
+ "idle":    {"phase": "专注", "time": "25:00", "status": "", "btn": "开始", "count": 0, "title": "番茄钟 · 今天 0 个"},
+ "paused":  {"phase": "专注", "time": "12:34", "status": "已暂停", "btn": "继续", "count": 3, "title": "12:34 · 已暂停"},
+ "ended":   {"phase": "休息", "time": "05:00", "status": "专注结束", "btn": "开始", "count": 4, "title": "专注结束！ ⇄ 番茄钟 · 今天 4 个"},
+ "break":   {"phase": "休息", "time": "04:59", "status": "", "btn": "暂停", "count": 4, "title": "04:59 · 休息"}
+}
+</script>
+<script src="../_workbench/workbench.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const SAMPLE=JSON.parse($('#sampleData').textContent);
+/* 样例是 Feature Spec 里的真实文案；按状态填字，样式切换全靠 CSS 的 data-state */
+let lastState=null;
+function render(state){if(state===lastState)return;lastState=state;const d=SAMPLE[state]||SAMPLE.running;
+  $('.pphase').textContent=d.phase;$('.ptn').textContent=d.time;$('.pstatus').textContent=d.status;
+  $('.lvl.page .pbtn').textContent=d.btn;$('.prec b').textContent=d.count;$('.mtt').textContent=d.title.split(' ⇄ ')[0]}
+const px=v=>Math.round(v);
+WB.init({hooks:{
+  fonts:[],
+  afterApply(S,{frame,byId}){render(S.state);
+    /* 矮屏（手机横屏）：宽度不触发手机布局，但高度放不下桌面字号——高度低于 s.short-bp 时同样换手机字号、取消上移 */
+    const sb=byId['s.short-bp'];frame.classList.toggle('short',!!sb&&frame.offsetHeight<sb.value)},
+  sizes(S,{frame,byId,W,H,mob}){
+    const col=$('.pcol'),tm=$('.ptimer'),tn=$('.ptn'),ctl=$('.pctl'),b1=$('.lvl.page .pbtn'),b2=$('.lvl.page .pskip'),rec=$('.prec');
+    if(!col||!tn||!col.offsetHeight)return [['视口',W+'×'+H],['单栏',mob?'是':'否']];
+    const colW=Math.min(col.clientWidth-2*byId['s.gutter'].value,byId['s.col-max'].value);
+    const need=tm.offsetHeight+ctl.offsetHeight+byId['sp.ctl-gap'].value+rec.offsetHeight+byId['sp.rec-gap'].value;
+    const avail=col.clientHeight-(frame.classList.contains('short')?0:byId['s.lift'].value);
+    const center=(col.offsetTop+tm.offsetTop+tm.offsetHeight/2)/H;
+    return [['视口',W+'×'+H],['单栏（手机字号）',mob?'是':'否'],['矮屏',frame.classList.contains('short')?'是':'否'],
+      ['剩余时间数字宽',px(tn.offsetWidth)+'px'],['数字宽 / 内容列宽',px(tn.offsetWidth)+' / '+px(colW)+' = '+Math.round(tn.offsetWidth/colW*100)+'%'],
+      ['计时块中心在视口',Math.round(center*100)+'%（50% 为正中）'],
+      ['内容需要 / 可用高度',px(need)+' / '+px(avail)+(need>avail?' ✗ 放不下，溢出 '+px(need-avail)+'px':' ✓')],
+      ['主按钮 / 跳过 宽',px(b1.offsetWidth)+' / '+px(b2.offsetWidth)+'px'],['按钮高',px(b1.offsetHeight)+'px']];
+  },
+  specs({byId,fmt}){},
+  decisions:[
+    ['D1','页面不滚动：内容列在视口里垂直居中再上移一点，存储提示贴底；三块之间只靠留白分组，不用卡片和分割线。',['A','B','C','D']],
+    ['D2','阶段只换两处颜色（阶段标签、主按钮底色），不换整页背景色，不出现进度环。',['A1','B1']],
+    ['D3','状态说明一行始终占位，出现/消失时按钮不上下跳。',['A3']],
+    ['D4','标签页标题格式按 PRD R4，剩余时间放最前面。',['E']]
+  ]
+}});
+})();
+</script>
+</body>
+</html>
