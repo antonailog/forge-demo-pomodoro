@@ -68,6 +68,12 @@
     try {
       if (body.getAttribute('data-phase') !== v.phase) {
         body.setAttribute('data-phase', v.phase);
+        // 按 DESIGN §5.1，切阶段时让主按钮底色立即到位，保留普通悬停过渡。
+        try {
+          for (const animation of ui.primary.getAnimations()) {
+            if (animation.transitionProperty === 'background-color') animation.finish();
+          }
+        } catch {}
       }
       if (body.getAttribute('data-storage') !== storageStatus) {
         body.setAttribute('data-storage', storageStatus);
