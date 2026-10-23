@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>番茄钟 · 今天 0 个</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="pomodoro.tokens.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-phase="focus" data-storage="ok">
+  <main class="main">
+    <div class="content">
+      <section class="timer">
+        <p class="phase" data-ui="phase">专注</p>
+        <p class="time" data-ui="time">25:00</p>
+        <p class="status" data-ui="status" aria-live="polite"></p>
+      </section>
+      <div class="controls">
+        <button class="primary" type="button" data-ui="primary">开始</button>
+        <button class="skip" type="button" data-ui="skip">跳过</button>
+      </div>
+      <p class="count" data-ui="count">今天完成 <b data-ui="count-num">0</b> 个</p>
+    </div>
+  </main>
+  <footer class="footer">
+    <p class="notice" data-ui="notice">这个浏览器不能保存记录，刷新后今天的完成数会清零</p>
+  </footer>
+  <script src="timer-core.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
