@@ -6,7 +6,7 @@
  * 2. 语义色写在本文件 :root，按 §2.1「语义（站点级）」用 var() 引用原始值；
  *    字体 --font-sans 同样写在本文件 :root，值以 §2.2 为准。
  * 3. --pomo-* 组件 token 在 pomodoro.tokens.css，由工作台导出，勿手改。
- *    组件规则只写 var()；布局、组件样式、状态切换与断点由 DI2 实现。
+ *    组件规则只写 var()；布局、组件样式、状态切换与断点见下文。
  *
  * 样式与行为的接口：
  * - body[data-phase]：focus（默认）| break。
@@ -28,7 +28,7 @@
  * 五个比对锚点 [data-ui=phase]、[data-ui=time]、[data-ui=primary]、
  * [data-ui=skip]、[data-ui=count] 不得删改。
  *
- * 断点约定：媒体查询不能读变量，DI2 使用以下字面值，并在行尾注明 token 名：
+ * 断点约定：媒体查询不能读变量，使用以下字面值，并在行尾注明 token 名：
  * @media (max-width: 599px) 来自 --pomo-mob-bp: 600px。
  * @media (max-height: 479px) 来自 --pomo-short-bp: 480px。
  */
@@ -61,4 +61,208 @@
   --success: var(--green-700);
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+/* 基础 */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body,
+p {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: var(--pomo-label-lh);
+}
+
+:where(button) {
+  font: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* 页面框架：内容不足一屏时居中，极小窗口下随内容自然撑开。 */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--pomo-gutter) var(--pomo-lift);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: var(--pomo-col-max);
+}
+
+.footer {
+  flex: none;
+  height: calc(var(--pomo-foot-h) + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--pomo-gutter) env(safe-area-inset-bottom);
+}
+
+/* 计时区 A */
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.phase {
+  margin-bottom: var(--pomo-phase-gap);
+  font-size: var(--pomo-phase-size);
+  font-weight: var(--pomo-phase-weight);
+  line-height: var(--pomo-label-lh);
+  color: var(--pomo-phase-focus);
+}
+
+.time {
+  font-size: var(--pomo-time-size);
+  font-weight: var(--pomo-time-weight);
+  line-height: var(--pomo-time-lh);
+  color: var(--pomo-time-color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.status {
+  min-height: calc(var(--pomo-status-size) * var(--pomo-label-lh));
+  margin-top: var(--pomo-status-gap);
+  font-size: var(--pomo-status-size);
+  line-height: var(--pomo-label-lh);
+  color: var(--pomo-status-color);
+}
+
+/* 控制区 B */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pomo-btn-gap);
+  width: 100%;
+  max-width: var(--pomo-col-max);
+  margin-top: var(--pomo-ctl-gap);
+}
+
+.primary {
+  height: var(--pomo-btn-h);
+  padding: 0 var(--pomo-btn-px);
+  border-radius: var(--pomo-btn-radius);
+  background: var(--pomo-btn-bg-focus);
+  color: var(--pomo-btn-fg);
+  font-size: var(--pomo-btn-size);
+  font-weight: var(--pomo-btn-weight);
+  transition: background-color var(--pomo-btn-ms) ease-out;
+}
+
+.primary:hover,
+.primary:active {
+  background: var(--pomo-btn-bg-focus-hover);
+}
+
+.skip {
+  height: var(--pomo-btn-h);
+  padding: 0 var(--pomo-skip-px);
+  border-radius: var(--pomo-btn-radius);
+  color: var(--pomo-skip-color);
+  font-size: var(--pomo-btn-size);
+  transition: background-color var(--pomo-btn-ms) ease-out;
+}
+
+.skip:hover,
+.skip:active {
+  background: var(--pomo-skip-hover-bg);
+  color: var(--foreground);
+}
+
+.primary:focus-visible,
+.skip:focus-visible {
+  outline: var(--pomo-ring-w) solid var(--pomo-ring-color);
+  outline-offset: var(--pomo-ring-offset);
+}
+
+/* 记录区 C 与存储提示 D */
+.count {
+  margin-top: var(--pomo-rec-gap);
+  font-size: var(--pomo-rec-size);
+  line-height: var(--pomo-label-lh);
+  color: var(--pomo-rec-color);
+}
+
+[data-ui="count-num"] {
+  color: var(--pomo-rec-num-color);
+  font-weight: var(--pomo-rec-num-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.notice {
+  display: none;
+  font-size: var(--pomo-notice-size);
+  line-height: var(--pomo-label-lh);
+  color: var(--pomo-notice-color);
+  text-align: center;
+}
+
+/* 状态只由 body 上的阶段、存储属性控制。 */
+body[data-phase="break"] .phase {
+  color: var(--pomo-phase-break);
+}
+
+body[data-phase="break"] .primary {
+  background: var(--pomo-btn-bg-break);
+}
+
+body[data-phase="break"] .primary:hover,
+body[data-phase="break"] .primary:active {
+  background: var(--pomo-btn-bg-break-hover);
+}
+
+body[data-storage="off"] .notice {
+  display: block;
+}
+
+@media (max-width: 599px) { /* --pomo-mob-bp: 600px */
+  .time {
+    font-size: var(--pomo-time-size-mob);
+  }
+}
+
+@media (max-height: 479px) { /* --pomo-short-bp: 480px */
+  .time {
+    font-size: var(--pomo-time-size-mob);
+  }
+
+  .main {
+    padding-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .skip {
+    transition: none;
+  }
 }
