@@ -4,6 +4,7 @@
   const core = window.PomodoroCore;
   const STORAGE_KEY = 'pomodoro.v1';
   let storage = null;
+  let audioContext = null;
   let body;
   let ui;
 
@@ -80,8 +81,51 @@
     } catch {}
   }
 
+  function unlockAudio() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      if (audioContext === null) audioContext = new AudioContext();
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {});
+      }
+    } catch {
+      audioContext = null;
+    }
+  }
+
   function handleEvents(events) {
-    // T03 在这里添加提示音。
+    for (const event of events) {
+      if (event.type !== 'complete') continue;
+      try {
+        if (audioContext === null) continue;
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().catch(() => {});
+          continue;
+        }
+        if (audioContext.state !== 'running') continue;
+
+        const now = audioContext.currentTime;
+        const endAt = now + 0.82;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(660, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(now);
+        oscillator.stop(endAt);
+      } catch {}
+    }
+  }
+
+  function acknowledgeAlert() {
+    if (!state.alert) return;
+    state = core.ack(state);
+    render(Date.now());
   }
 
   function applyResult(result, now) {
@@ -111,6 +155,7 @@
   } catch {}
 
   listen(ui.primary, 'click', function () {
+    unlockAudio();
     syncCounter();
     const now = Date.now();
     applyResult(core.press(state, now), now);
@@ -121,6 +166,11 @@
     const now = Date.now();
     applyResult(core.skip(state, now), now);
   });
+
+  try {
+    document.addEventListener('pointerdown', acknowledgeAlert, true);
+    document.addEventListener('keydown', acknowledgeAlert, true);
+  } catch {}
 
   listen(document, 'visibilitychange', function () {
     if (document.visibilityState === 'visible') {
