@@ -19,7 +19,9 @@
 
 ## 项目特化规则
 
-（在此追加本项目特有的硬约束）
+- 纯前端静态页面：不加后端、不加第三方依赖、不加构建步骤；页面不请求任何外部网址；保证本地双击 `index.html` 能打开（不用 `type="module"`）。
+- 样式和行为只通过 `style.css` 文件头写明的接口对接（`body` 上两个属性加几处文字），行为代码不加类名、不写内联样式。
+- 验证命令：单测 `node --test tests/timer-core.test.js`；浏览器验收与回归见 `docs/QA.md` 第六、七节；需求设计文档检查 `node scripts/design-doc/check.mjs main`。
 
 ## Forge 工作流
 
@@ -104,4 +106,5 @@
 - 设计文档：`docs/DESIGN.md`
 - 工程文档：`docs/ENGINEERING.md`
 - QA 报告：`docs/QA.md`
+- 版本记录：`docs/CHANGELOG.md`
 - Feature 状态：`.features/_registry.md`

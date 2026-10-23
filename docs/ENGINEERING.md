@@ -9,7 +9,7 @@ last_updated: 2026-10-23
 
 **版本:** v1.0
 **日期:** 2026-10-23
-**状态:** 已实现，待 forge-qa 验收
+**状态:** 已实现，已通过 forge-qa 验收，v1.0 已合进主分支（[PR #1](https://github.com/antonailog/forge-demo-pomodoro/pull/1)）
 
 > 上游：产品 [PRD.md](PRD.md) v1.0、行为契约 [Feature Spec](../.features/pomodoro-timer/feature-spec.md)、设计 [DESIGN.md](DESIGN.md) v1.0、本轮灰区默认 [v1.0-CONTEXT.md](v1.0-CONTEXT.md)、技术调研 [v1.0-RESEARCH.md](v1.0-RESEARCH.md)。下游：forge-qa 用 §七 测试矩阵。
 
@@ -23,6 +23,7 @@ last_updated: 2026-10-23
 - 计时只存「结束时刻」，显示值现算；保存一条本机记录，刷新、重开按规则恢复 — 详见 §三.2、§五
 - Feature Spec 两处未写明的情形按「最不打扰用户」补齐：同一段被两个页面同时恢复时只计一次；到点提示不跨刷新保留 — 详见 §三.2、ENGINEERING-CHANGELOG v1.0
 - **变更统计**：新增 3 个代码文件（`timer-core.js`、`app.js`、`tests/timer-core.test.js`），修改 `index.html`（加两行脚本引用）
+- 上线前审查（forge-review）修正两处：暂停时存下的剩余时间也不超过本段时长；`try/catch` 只留在存储和提示音两处 — 详见 ENGINEERING-CHANGELOG v1.0「上线前审查修正」
 
 ---
 
