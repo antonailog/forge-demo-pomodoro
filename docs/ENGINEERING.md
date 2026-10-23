@@ -153,7 +153,7 @@ tests/timer-core.test.js  规则单测（本版新增）
 | 启动 | 探测存储（写一个探测键再删掉）→ 读记录 → `restore` → 立即保存一次（顺便改正不合法记录）→ 渲染 → 启动走秒 |
 | 走秒 | `setInterval` 每 250ms：到点前先从存储同步完成数 → `tick` → 有变化就保存 → 渲染；`visibilitychange`（变为可见）、`pageshow` 时立即做一次 |
 | 多页面 | 监听 `storage` 事件：其他页面写入后合并完成数并重新渲染；保存前先合并存储里的完成数，不会用旧数覆盖别的页面写入的数；两个页面的计时不同步 |
-| 存储降级 | 访问、读、写 `localStorage` 全部 `try/catch`；探测或任意一次写入失败 → `body[data-storage]="off"`，底部提示出现，计时照常，完成数只在本次打开期间累计 |
+| 存储降级 | 访问、读、写 `localStorage` 全部 `try/catch`（`try/catch` 只用在存储和提示音两处，页面结构出错直接在控制台暴露）；探测或任意一次写入失败 → `body[data-storage]="off"`，底部提示出现，计时照常，完成数只在本次打开期间累计 |
 | 渲染 | `view()` 的结果逐项与上次比较，只在变化时写文字、属性、标题 |
 | 提示音 | 主按钮被点击时创建或 `resume()` 一个 `AudioContext`（网页出声需要用户先操作）；收到 `complete` 事件且 `AudioContext` 处于运行状态时合成一声：正弦波约 660Hz、峰值音量约 0.1、约 20ms 淡入、约 0.8 秒内淡出；从没点过主按钮、浏览器拦截、任何异常都静默跳过，`resume()` 的 Promise 一律 `.catch` |
 | 确认看到提醒 | `document` 上捕获阶段监听 `pointerdown`、`keydown`：有未确认提示时 `ack` 并渲染；按键只用来确认，不触发开始 / 暂停（快捷键是非目标） |
@@ -341,4 +341,3 @@ now ≥ endAt（前台或后台，后台可能被浏览器推迟）
 | 提示音音色回填 DESIGN.md | DESIGN「待优化」中列了此项；本版参数记在 §三.3，回填由 forge-design 负责 |
 | 暗色模式、自定义时长、静音开关、快捷键、系统通知等 | Feature Spec 第六节非目标 / DESIGN 待优化 |
 | 到点切换阶段时主按钮底色有约 0.12 秒过渡（DESIGN §5.1 写「直接切换」） | 来自 `style.css` 给悬停用的 `background-color` 过渡，阶段切换也会触发；肉眼几乎不可见，已列入需求设计文档待拍板，改法归 forge-design-impl |
-| `app.js` 对 DOM 写入、事件绑定也包了 `try/catch` | 冗余但不吞规则错误（`view()` 在 `try` 外）；留给 forge-review 决定是否精简 |

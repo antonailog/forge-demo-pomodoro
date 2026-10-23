@@ -142,9 +142,15 @@ test('U7 系统时间回调及剩余时间边界：两个阶段均夹到完整�
     assert.equal(core.remainingMs(running, earlier), duration);
     assert.equal(core.view(running, earlier).time, time);
     const paused = core.press(running, earlier);
-    assert.equal(paused.state.remainingMs, duration + 600000);
+    // 暂停时存下的剩余时间同样夹到完整时长：继续后马上往下走，刷新前后一致。
+    assert.equal(paused.state.remainingMs, duration);
     assert.equal(core.remainingMs(paused.state, NOW), duration);
     assert.equal(core.view(paused.state, NOW).time, time);
+    const resumed = core.press(paused.state, earlier);
+    assert.equal(resumed.state.endAt, earlier + duration);
+    assert.equal(core.view(resumed.state, earlier + 1000).time, phase === 'focus' ? '24:59' : '04:59');
+    const reloaded = core.restore(core.parseRecord(JSON.stringify(core.toRecord(paused.state))), earlier);
+    assert.equal(reloaded.remainingMs, paused.state.remainingMs);
     assert.equal(core.remainingMs(state({ phase, status: 'paused', remainingMs: -1 }), NOW), 0);
     assert.equal(core.remainingMs(state({ phase, status: 'running', endAt: NOW - 1 }), NOW), 0);
     assert.equal(core.remainingMs(state({ phase, status: 'running', endAt: NOW }), NOW), 0);

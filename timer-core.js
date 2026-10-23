@@ -86,7 +86,7 @@
     const current = ack(result.state);
     if (current.status === 'running') {
       return {
-        state: { ...current, status: 'paused', remainingMs: current.endAt - now, endAt: null },
+        state: { ...current, status: 'paused', remainingMs: remainingMs(current, now), endAt: null },
         events: [],
       };
     }

@@ -3,24 +3,24 @@
 
   const core = window.PomodoroCore;
   const STORAGE_KEY = 'pomodoro.v1';
+  // 走秒检查间隔（毫秒）：短于一秒，数字翻动不拖拍（ENGINEERING §三.3）。
+  const TICK_MS = 250;
+  // 提示音（ENGINEERING §三.3）：正弦波频率、峰值音量、淡入秒数、总时长秒数。
+  const BEEP = { hz: 660, peak: 0.1, fadeIn: 0.02, length: 0.82 };
+
+  // 只有存储和声音会因浏览器设置失败，try/catch 只包这两处；
+  // 页面结构出错要在控制台暴露，不静默吞掉。
+  const body = document.body;
+  const ui = {
+    phase: document.querySelector('[data-ui=phase]'),
+    time: document.querySelector('[data-ui=time]'),
+    status: document.querySelector('[data-ui=status]'),
+    primary: document.querySelector('[data-ui=primary]'),
+    skip: document.querySelector('[data-ui=skip]'),
+    count: document.querySelector('[data-ui=count-num]'),
+  };
   let storage = null;
   let audioContext = null;
-  let body;
-  let ui;
-
-  try {
-    body = document.body;
-    ui = {
-      phase: document.querySelector('[data-ui=phase]'),
-      time: document.querySelector('[data-ui=time]'),
-      status: document.querySelector('[data-ui=status]'),
-      primary: document.querySelector('[data-ui=primary]'),
-      skip: document.querySelector('[data-ui=skip]'),
-      count: document.querySelector('[data-ui=count-num]'),
-    };
-  } catch {
-    return;
-  }
 
   try {
     const candidate = window.localStorage;
@@ -59,26 +59,23 @@
   }
 
   function setText(node, value) {
-    if (node && node.textContent !== value) node.textContent = value;
+    if (node.textContent !== value) node.textContent = value;
+  }
+
+  function setAttr(name, value) {
+    if (body.getAttribute(name) !== value) body.setAttribute(name, value);
   }
 
   function render(now) {
     const v = core.view(state, now);
-    const storageStatus = storage === null ? 'off' : 'ok';
-    try {
-      if (body.getAttribute('data-phase') !== v.phase) {
-        body.setAttribute('data-phase', v.phase);
-      }
-      if (body.getAttribute('data-storage') !== storageStatus) {
-        body.setAttribute('data-storage', storageStatus);
-      }
-      setText(ui.phase, v.phaseLabel);
-      setText(ui.time, v.time);
-      setText(ui.status, v.status);
-      setText(ui.primary, v.primary);
-      setText(ui.count, String(v.count));
-      if (document.title !== v.title) document.title = v.title;
-    } catch {}
+    setAttr('data-phase', v.phase);
+    setAttr('data-storage', storage === null ? 'off' : 'ok');
+    setText(ui.phase, v.phaseLabel);
+    setText(ui.time, v.time);
+    setText(ui.status, v.status);
+    setText(ui.primary, v.primary);
+    setText(ui.count, String(v.count));
+    if (document.title !== v.title) document.title = v.title;
   }
 
   function unlockAudio() {
@@ -106,13 +103,13 @@
         if (audioContext.state !== 'running') continue;
 
         const now = audioContext.currentTime;
-        const endAt = now + 0.82;
+        const endAt = now + BEEP.length;
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(660, now);
+        oscillator.frequency.setValueAtTime(BEEP.hz, now);
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+        gain.gain.linearRampToValueAtTime(BEEP.peak, now + BEEP.fadeIn);
         gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
@@ -142,46 +139,36 @@
     applyResult(core.tick(state, now), now);
   }
 
-  function listen(target, type, handler) {
-    try {
-      target.addEventListener(type, handler);
-    } catch {}
-  }
-
   saveRecord();
   render(now);
-  try {
-    window.setInterval(step, 250);
-  } catch {}
+  window.setInterval(step, TICK_MS);
 
-  listen(ui.primary, 'click', function () {
+  ui.primary.addEventListener('click', function () {
     unlockAudio();
     syncCounter();
     const now = Date.now();
     applyResult(core.press(state, now), now);
   });
 
-  listen(ui.skip, 'click', function () {
+  ui.skip.addEventListener('click', function () {
     syncCounter();
     const now = Date.now();
     applyResult(core.skip(state, now), now);
   });
 
-  try {
-    document.addEventListener('pointerdown', acknowledgeAlert, true);
-    document.addEventListener('keydown', acknowledgeAlert, true);
-  } catch {}
+  document.addEventListener('pointerdown', acknowledgeAlert, true);
+  document.addEventListener('keydown', acknowledgeAlert, true);
 
-  listen(document, 'visibilitychange', function () {
+  document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
       syncCounter();
       step();
     }
   });
 
-  listen(window, 'pageshow', step);
+  window.addEventListener('pageshow', step);
 
-  listen(window, 'storage', function (event) {
+  window.addEventListener('storage', function (event) {
     if (event.key === STORAGE_KEY || event.key === null) {
       syncCounter();
       render(Date.now());
