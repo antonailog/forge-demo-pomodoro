@@ -1,0 +1,10 @@
+{
+  "topic": "先写需求规格和验收检查表",
+  "module": "K1",
+  "created": "2026-10-23",
+  "generator": "codex 内置 image_gen（经本机 codex CLI）",
+  "status": "generated",
+  "prompt": "2026-10-23-fupan-k1-spec-first.prompt.md",
+  "image": "2026-10-23-fupan-k1-spec-first.png",
+  "note": ""
+}

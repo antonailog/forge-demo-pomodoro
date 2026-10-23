@@ -1,0 +1,10 @@
+{
+  "topic": "写代码的和验收的要分开",
+  "module": "K2",
+  "created": "2026-10-23",
+  "generator": "未调用",
+  "status": "prompt_only",
+  "prompt": "2026-10-23-fupan-k2-separate-verifier.prompt.md",
+  "image": null,
+  "note": "示范为控制生图数量只出两张，本模块只保存 prompt pack，图像待生成"
+}
