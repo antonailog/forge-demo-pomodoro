@@ -18,5 +18,6 @@ last_updated: 2026-10-23
 | docs/DESIGN-CHANGELOG.md | changelog | global | 2026-10-23 |
 | docs/ENGINEERING.md | engineering | global | 2026-10-23 |
 | docs/ENGINEERING-CHANGELOG.md | changelog | global | 2026-10-23 |
+| docs/QA.md | qa | global | 2026-10-23 |
 | docs/v1.0-CONTEXT.md | plan | 番茄钟 | 2026-10-23 |
 | docs/v1.0-RESEARCH.md | research | 番茄钟 | 2026-10-23 |

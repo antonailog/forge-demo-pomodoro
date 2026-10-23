@@ -20,7 +20,7 @@ last_updated: 2026-10-23
 | [v1.0-RESEARCH.md](v1.0-RESEARCH.md) | v1.0 技术调研（forge-dev，迭代结项后归档） |
 | [ENGINEERING.md](ENGINEERING.md) | 工程当前真相源（架构、数据流、本机记录格式、测试矩阵；给 AI 看） |
 | [ENGINEERING-CHANGELOG.md](ENGINEERING-CHANGELOG.md) | 工程变更日志 |
-| QA.md | 当前验收手册（由 /forge-qa 创建） |
+| [QA.md](QA.md) | 当前验收手册（forge-qa：验收结论、方法与命令、回归清单；截图在 qa-screenshots/） |
 | [bugfix/backlog.md](bugfix/backlog.md) | Bug 任务池 |
 
 > 文档落地规则见 `~/.claude/skills/forge-doc-policy/doc-paths.md`。

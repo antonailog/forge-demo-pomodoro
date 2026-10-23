@@ -1,0 +1,235 @@
+{
+  "metadata": {
+    "source": "Feature Spec v1.0（.features/pomodoro-timer/feature-spec.md 第五节验收检查表 + 各需求异常态表）+ DESIGN.md v1.0 + ENGINEERING.md v1.0 §七测试矩阵 + v1.0-RESEARCH 坑点表",
+    "branch": "eng/pomodoro-timer-2026-10-23",
+    "commit": "9aee673",
+    "generated_at": "2026-10-23T02:20:00-07:00",
+    "scope": "full（全新功能，diff = 整个页面；同时 diff-aware 聚焦 app.js / timer-core.js / style.css / index.html）",
+    "level": "详尽（Phase 1-4）",
+    "app_url": "http://127.0.0.1:4577/index.html",
+    "file_url": "file://<worktree>/index.html",
+    "selector_strategy": "data-ui 业务属性 + body[data-phase|data-storage] + 语义标签；项目零 data-testid，不编造",
+    "time_control": "Playwright page.clock：install 后 goto，pauseAt 未来时间点，再 runFor / setSystemTime；CSS 过渡按真实时间走，颜色断言前移开鼠标并等真实 200ms",
+    "storage_key": "pomodoro.v1",
+    "dimensions_enabled": ["console", "network", "functional", "data-driven", "visual", "responsive", "accessibility"],
+    "dimensions_skipped": {
+      "streaming": "无 SSE / WebSocket / 流式接口（选择器审计未发现 EventSource、WebSocket、fetch）",
+      "url-state": "单页无路由、无 hash / query 状态",
+      "async-content": "纯静态页，无异步加载、懒加载、骨架屏"
+    }
+  },
+  "selector_map": {
+    "phase": "[data-ui=phase]",
+    "time": "[data-ui=time]",
+    "status": "[data-ui=status]",
+    "primary": "[data-ui=primary]",
+    "skip": "[data-ui=skip]",
+    "count_line": "[data-ui=count]",
+    "count_num": "[data-ui=count-num]",
+    "notice": "[data-ui=notice]",
+    "body_phase_attr": "body[data-phase]",
+    "body_storage_attr": "body[data-storage]",
+    "main": "main.main",
+    "timer_block": "section.timer",
+    "footer": "footer.footer"
+  },
+  "suites": [
+    {
+      "id": "smoke",
+      "name": "Phase 1 冒烟：控制台、网络、本地双击打开",
+      "phase": 1,
+      "priority": "P0",
+      "cases": [
+        { "id": "S01", "dimension": "console", "source": "SKILL 铁律 6 + ENGINEERING E15", "description": "全程零 console.error、零 pageerror、零未处理的 Promise 拒绝（所有用例共用监听，任一出现即该用例 FAIL）",
+          "steps": [{ "action": "attach_monitors" }, { "action": "add_init_script", "script": "unhandledrejection → console.error" }],
+          "assertions": [{ "type": "evaluate", "description": "每个用例结束时 collector.consoleErrors 为空" }] },
+        { "id": "S02", "dimension": "network", "source": "PRD §六 不从外部网址加载资源 + ENGINEERING E15", "description": "所有请求同源（127.0.0.1:4577）或 data:，状态码 < 400，没有任何外部网址请求",
+          "steps": [{ "action": "navigate", "url": "/index.html" }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 1500000 }],
+          "assertions": [{ "type": "evaluate", "description": "requests.every(u => u.startsWith(origin) || u.startsWith('data:'))" }, { "type": "evaluate", "description": "responses.every(s < 400)" }] },
+        { "id": "S03", "dimension": "functional", "source": "PRD §六 本地双击打开 + ENGINEERING E16", "description": "file:// 打开与 http 打开行为一致：空态、开始走秒、刷新恢复",
+          "steps": [{ "action": "navigate", "url": "file://<worktree>/index.html" }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 61000 }, { "action": "reload" }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=time]", "texts": ["23:59"] }, { "type": "contains_text", "selector": "[data-ui=primary]", "texts": ["暂停"] }, { "type": "matches_regex", "target": "document.title", "pattern": "^23:5\\d · 专注$" }] }
+      ]
+    },
+    {
+      "id": "r1",
+      "name": "R1 计时与控制",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "F01", "dimension": "functional", "source": "检查表 R1 正常-开始 / R1 空态 / ENGINEERING E1、E2", "description": "清空存储首次打开：专注 25:00、开始、今天 0 个、data-phase=focus、data-storage=ok、标题「番茄钟 · 今天 0 个」；点开始后从 25:00 每秒减少、主按钮变暂停，记录 endAt = 点击时刻 + 25 分钟",
+          "steps": [{ "action": "clock_install_pause" }, { "action": "navigate" }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "sample_each_second", "seconds": 5 }],
+          "assertions": [
+            { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["25:00"], "when": "点击前" },
+            { "type": "has_attribute", "selector": "body", "attr": "data-phase", "value": "focus" },
+            { "type": "has_attribute", "selector": "body", "attr": "data-storage", "value": "ok" },
+            { "type": "evaluate", "description": "点击后逐秒采样依次为 25:00→24:59→24:58…，单调递减、每秒减 1" },
+            { "type": "contains_text", "selector": "[data-ui=primary]", "texts": ["暂停"] },
+            { "type": "evaluate", "description": "localStorage['pomodoro.v1'] 的 phase=focus、status=running、endAt = 点击时刻 + 1500000" }] },
+        { "id": "F02", "dimension": "functional", "source": "检查表 R1 正常-暂停与继续", "description": "剩 12:34 时暂停：数字停住、状态说明「已暂停」、主按钮「继续」、标题「12:34 · 已暂停」，记录存 remainingMs、endAt 清空；过 5 分钟再继续从 12:34 接着走、「已暂停」消失",
+          "steps": [{ "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 746000 }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 300000 }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 1000 }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=status]", "texts": ["已暂停"] }, { "type": "evaluate", "description": "暂停 5 分钟后时间仍为 12:34" }, { "type": "evaluate", "description": "记录 status=paused、endAt=null、remainingMs=754000" }, { "type": "evaluate", "description": "继续 1 秒后显示 12:33、状态说明为空、记录 endAt = 继续时刻 + 754000" }] },
+        { "id": "F03", "dimension": "functional", "source": "检查表 R1 异常-跳过", "description": "今天已完成 2 个，专注进行中 / 已暂停时点跳过：立即「休息 05:00」、主按钮「开始」、完成数仍为 2、不响铃（振荡器计数不变）、标题不交替（直接「番茄钟 · 今天 2 个」并保持）；再点跳过回到「专注 25:00」",
+          "steps": [{ "action": "set_record", "count": 2 }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "click", "selector": "[data-ui=skip]" }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=phase]", "texts": ["休息"] }, { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["05:00"] }, { "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["2"] }, { "type": "evaluate", "description": "__osc 不变；之后 3 秒内标题恒为「番茄钟 · 今天 2 个」" }] },
+        { "id": "F04", "dimension": "functional", "source": "检查表 R1 边界-后台放置后回到前台 / ENGINEERING E13", "description": "页面标记为隐藏（visibilityState=hidden）期间时钟跳过 7 分钟且不触发定时器，变为可见时立即显示真实剩余时间；另测跳过结束时刻后变为可见立即结算",
+          "steps": [{ "action": "click", "selector": "[data-ui=primary]" }, { "action": "set_visibility", "value": "hidden" }, { "action": "set_system_time", "delta_ms": 420000 }, { "action": "set_visibility", "value": "visible" }],
+          "assertions": [{ "type": "evaluate", "description": "可见事件后不经任何定时器，时间立即为 18:00" }, { "type": "evaluate", "description": "跨过结束时刻的情形：可见后立即为休息 05:00、完成数 +1" }] },
+        { "id": "F05", "dimension": "functional", "source": "检查表 R1 边界-快速连点", "description": "专注待开始时 11 次快速连点主按钮（每次间隔 0~120ms）：状态按点击次数在进行中 / 已暂停之间交替，最终为进行中；全程剩余时间不跳变、不为负、不超过 25:00",
+          "steps": [{ "action": "click_n", "selector": "[data-ui=primary]", "n": 11 }],
+          "assertions": [{ "type": "evaluate", "description": "每次点击后的主按钮文案依次为 暂停/继续/暂停…" }, { "type": "matches_regex", "selector": "[data-ui=time]", "pattern": "^(25:00|24:5\\d)$" }] },
+        { "id": "F06", "dimension": "functional", "source": "检查表 R1 错误态-系统时间往回调", "description": "专注进行中把系统时间往回调 10 分钟 / 2 小时：剩余时间显示为 25:00（不超过完整时长），无错误；休息同理不超过 05:00",
+          "steps": [{ "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 60000 }, { "action": "set_system_time", "delta_ms": -600000 }, { "action": "run_for", "ms": 500 }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=time]", "texts": ["25:00"] }, { "type": "matches_regex", "target": "document.title", "pattern": "^25:00 · 专注$" }] }
+      ]
+    },
+    {
+      "id": "r2",
+      "name": "R2 今日完成数",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "F07", "dimension": "functional", "source": "检查表 R2 正常-专注走到点", "description": "今天 2 个，专注走到 00:00：显示「今天完成 3 个」、切到「休息 05:00」待开始、data-phase=break；记录 count=3",
+          "steps": [{ "action": "set_record", "count": 2 }, { "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 1500500 }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["3"] }, { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["05:00"] }, { "type": "has_attribute", "selector": "body", "attr": "data-phase", "value": "break" }, { "type": "evaluate", "description": "记录 count=3、phase=break、status=idle" }] },
+        { "id": "F08", "dimension": "functional", "source": "检查表 R2 异常-休息到点、跳过专注", "description": "今天 3 个：休息走到点后仍为 3、切到「专注 25:00」待开始、状态说明「休息结束」；专注中跳过也仍为 3",
+          "steps": [{ "action": "run_for", "ms": 300500 }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["3"] }, { "type": "contains_text", "selector": "[data-ui=status]", "texts": ["休息结束"] }] },
+        { "id": "F09", "dimension": "functional", "source": "检查表 R2 边界-跨零点 / ENGINEERING E7", "description": "(a) 昨天 5 个、页面开着、时钟从 23:59:50 走过零点 → 走秒后显示「今天完成 0 个」；(b) 23:50 开始的专注在 00:15 结束 → 今天完成 1 个，记录 date 为新的一天",
+          "steps": [{ "action": "clock_install_pause", "at": "23:59:50" }, { "action": "run_for", "ms": 15000 }],
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["0"] }, { "type": "evaluate", "description": "(b) count=1、record.date=次日" }] },
+        { "id": "F10", "dimension": "data-driven", "source": "检查表 R2 错误态/陈旧态", "description": "数据驱动：完成数为 -1、2.5、\"3\"、null、1e400 字面量、超大合法整数，以及记录日期为昨天 / 去年 → 一律显示 0（陈旧日期）或按无记录处理（不合法），无错误，存储被改写为合法记录",
+          "data_driven": { "source": "inline 记录变体表", "strategy": "全量（变体数 < 20）" },
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["0"] }, { "type": "evaluate", "description": "parse(localStorage) 合法：v=1、count 为非负整数、date=今天" }] }
+      ]
+    },
+    {
+      "id": "r3",
+      "name": "R3 到点提醒",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "F11", "dimension": "functional", "source": "检查表 R3 正常-后台到点响一声（真实等待）/ ENGINEERING M1", "description": "真实时间：点开始后不快进，等满 25 分钟，记录提示音实际发出时刻比结束时刻晚多少；无头浏览器无法把标签页转入后台（已实测三种办法都仍为可见），因此另做『冻结页面跨过到点再解冻』近似电脑睡眠，并如实标注与真实后台的差别",
+          "steps": [{ "action": "real_wait", "minutes": 25 }],
+          "assertions": [{ "type": "evaluate", "description": "提示音（createOscillator）恰好 1 次；记录 (振荡器时刻 − endAt) 毫秒数；完成数 +1；标题交替" }],
+          "manual_followup": "需求方在真实 Chrome / Safari / Firefox 里：点开始后切到别的软件，25 分钟后听铃并看表记录晚了多久" },
+        { "id": "F12", "dimension": "functional", "source": "检查表 R3 正常-标题交替与停止 / ENGINEERING E3、E4", "description": "专注到点（页面在前台）：振荡器恰好 1 次；状态说明「专注结束」；标题按秒在「专注结束！」与「番茄钟 · 今天 1 个」间交替（连续采样 6 秒，两种都出现且相邻两秒不同）；在页面空白处点击后停止交替、状态说明消失；另测按任意键（Shift / a）停止交替且不开始计时",
+          "steps": [{ "action": "click", "selector": "[data-ui=primary]" }, { "action": "run_for", "ms": 1500000 }, { "action": "sample_title", "seconds": 6 }, { "action": "click", "target": "空白处 (20,20)" }],
+          "assertions": [{ "type": "evaluate", "description": "__osc === 1" }, { "type": "contains_text", "selector": "[data-ui=status]", "texts": ["专注结束"] }, { "type": "evaluate", "description": "采样集合 = {专注结束！, 番茄钟 · 今天 1 个} 且交替" }, { "type": "evaluate", "description": "ack 后 6 秒标题恒为「番茄钟 · 今天 1 个」、状态说明为空、主按钮仍为「开始」" }] },
+        { "id": "F13", "dimension": "functional", "source": "检查表 R3 异常-声音被拦截 / ENGINEERING E11", "description": "(a) 恢复出进行中的专注、没点过任何东西就到点：不创建 AudioContext、无错误、标题照常交替、状态说明「专注结束」；(b) AudioContext 构造即抛 NotAllowedError，点开始后到点：无控制台错误、无未处理拒绝、标题照常交替",
+          "assertions": [{ "type": "evaluate", "description": "__acNew === 0 且 __osc === 0" }, { "type": "evaluate", "description": "标题采样含「专注结束！」" }, { "type": "evaluate", "description": "consoleErrors.length === 0" }] },
+        { "id": "F14", "dimension": "functional", "source": "检查表 R3 无通知权限请求 / ENGINEERING E12", "description": "整轮专注 + 休息全程没有调用 Notification.requestPermission，也没有任何权限请求",
+          "assertions": [{ "type": "evaluate", "description": "__notif === 0 且 Notification.permission 未被改变" }] }
+      ]
+    },
+    {
+      "id": "r4",
+      "name": "R4 标签页标题",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "F15", "dimension": "functional", "source": "检查表 R4 四种标题格式", "description": "进行中「24:59 · 专注」/「04:59 · 休息」；已暂停「12:34 · 已暂停」；待开始「番茄钟 · 今天 N 个」；到点交替；进行中标题以剩余时间开头；另验『后台更新变慢』：时钟跳 3 分钟后第一次更新即为按结束时刻算出的真实值（不多于真实剩余）",
+          "assertions": [{ "type": "matches_regex", "target": "document.title", "pattern": "^\\d{2}:\\d{2} · (专注|休息|已暂停)$|^番茄钟 · 今天 \\d+ 个$|^(专注|休息)结束！$" }] }
+      ]
+    },
+    {
+      "id": "r5",
+      "name": "R5 保存与恢复",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "F16", "dimension": "functional", "source": "检查表 R5 正常 / ENGINEERING E5", "description": "进行中剩 10:00 刷新 → 专注进行中约 10:00 继续减少、主按钮暂停；暂停在 12:34 刷新 → 专注已暂停 12:34、主按钮继续、状态说明已暂停",
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=primary]", "texts": ["暂停"] }, { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["12:34"] }] },
+        { "id": "F17", "dimension": "functional", "source": "检查表 R5 异常-关页面期间到点 / ENGINEERING E6", "description": "今天 2 个、进行中、结束时刻已过（同一天）时打开：今天 3 个、「休息 05:00」待开始、主按钮开始、状态说明为空、不响铃、标题恒为「番茄钟 · 今天 3 个」（采样 4 秒不交替）",
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["3"] }, { "type": "evaluate", "description": "__osc === 0；标题采样只有一种值" }] },
+        { "id": "F18", "dimension": "functional", "source": "检查表 R5 边界-昨天就结束", "description": "记录为昨天进行中、结束时刻也在昨天：今天打开显示「今天完成 0 个」、「专注 25:00」待开始",
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=phase]", "texts": ["专注"] }, { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["25:00"] }, { "type": "contains_text", "selector": "[data-ui=count-num]", "texts": ["0"] }] },
+        { "id": "F19", "dimension": "functional", "source": "检查表 R5 边界-两个页面 / ENGINEERING E10 + §三.2 补齐", "description": "同一浏览器两个页面：(a) 两页各自计时不同的专注段，先后到点 → 完成数 2（不被旧数覆盖），另一页收到 storage 事件 / 回到前台显示最新数；(b) 两页恢复的是同一段 → 各自到点后只计 1",
+          "assertions": [{ "type": "evaluate", "description": "(a) record.count === 2 且两页都显示 2" }, { "type": "evaluate", "description": "(b) record.count === 1 且两页都显示 1" }] },
+        { "id": "F20", "dimension": "data-driven", "source": "检查表 R5 错误态-记录损坏 / ENGINEERING E8", "description": "数据驱动：乱码、空串、数组、null、v=2、缺字段、非法 phase / status、进行中缺 endAt、暂停 remainingMs ≤ 0、date 格式错 → 一律按无记录显示（专注 25:00 待开始、今天 0 个），无错误，存储被改写成合法记录",
+          "data_driven": { "source": "inline 损坏记录变体表", "strategy": "全量" },
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=time]", "texts": ["25:00"] }, { "type": "evaluate", "description": "localStorage 记录可被 JSON.parse 且 v=1、status=idle" }] },
+        { "id": "F21", "dimension": "functional", "source": "检查表 R5 降级态-禁止保存 / ENGINEERING E9", "description": "(a) 访问 window.localStorage 即抛 SecurityError：计时可用、data-storage=off、底部提示文字完全一致且可见、其他五个锚点位置与正常页面相同（不推动）；完成数在本次打开期间累计；(b) 探测能写、之后写入抛 QuotaExceededError：写失败后提示出现、计时照常",
+          "assertions": [{ "type": "has_attribute", "selector": "body", "attr": "data-storage", "value": "off" }, { "type": "contains_text", "selector": "[data-ui=notice]", "texts": ["这个浏览器不能保存记录，刷新后今天的完成数会清零"] }, { "type": "evaluate", "description": "五锚点 boundingBox 与 storage=ok 时相同" }] },
+        { "id": "G01", "dimension": "functional", "source": "ENGINEERING §三.2 补齐：到点提示不跨刷新保留", "description": "专注到点、提示交替中刷新页面：恢复为休息 05:00 待开始，状态说明为空，标题不再交替",
+          "assertions": [{ "type": "evaluate", "description": "刷新后 4 秒标题恒为「番茄钟 · 今天 1 个」" }] },
+        { "id": "G02", "dimension": "functional", "source": "ENGINEERING §三.2 补齐：刚好到点那一刻按按钮只结算", "description": "走到结束时刻的同一毫秒点主按钮：结果为休息 05:00 待开始（没有误开始休息），完成数 +1，响一声",
+          "assertions": [{ "type": "contains_text", "selector": "[data-ui=primary]", "texts": ["开始"] }, { "type": "contains_text", "selector": "[data-ui=time]", "texts": ["05:00"] }] }
+      ]
+    },
+    {
+      "id": "flow",
+      "name": "流程完整性",
+      "phase": 2,
+      "priority": "P0",
+      "cases": [
+        { "id": "P01", "dimension": "functional", "source": "检查表 流程-专注→休息循环无断点", "description": "打开 → 开始 → 专注到点（+1、提醒）→ 点击确认 → 开始休息 → 休息到点（提醒）→ 确认 → 回到专注 25:00 待开始；每一步文字、标题、data-phase 都对",
+          "assertions": [{ "type": "evaluate", "description": "逐步快照与状态流转图一致" }] },
+        { "id": "P02", "dimension": "functional", "source": "检查表 流程-每个状态下跳过都可用 / 状态流转图", "description": "6 个状态（专注 待开始/进行中/已暂停、休息 待开始/进行中/已暂停）各点一次跳过，都切到另一阶段的待开始、完成数不变、不响铃",
+          "assertions": [{ "type": "evaluate", "description": "6/6 目标状态正确" }] },
+        { "id": "P03", "dimension": "functional", "source": "检查表 流程-异常路径有明确页面表现", "description": "汇总 F13、F17、F20、F21 的结论", "assertions": [{ "type": "evaluate", "description": "四条全部 PASS" }] },
+        { "id": "P04", "dimension": "functional", "source": "检查表 流程-边界条件合理处理", "description": "汇总 F06、F09、F19、F23 的结论", "assertions": [{ "type": "evaluate", "description": "四条全部 PASS" }] }
+      ]
+    },
+    {
+      "id": "visual",
+      "name": "Phase 3 视觉合规（DESIGN.md token 实测）",
+      "phase": 3,
+      "priority": "P1",
+      "cases": [
+        { "id": "V01", "dimension": "visual", "source": "检查表 视觉-剩余时间是最大字号 / DESIGN §1.2", "description": "所有视口、所有状态下 [data-ui=time] 的 font-size 严格大于页面其他可见文字", "assertions": [{ "type": "evaluate", "description": "max(other font-size) < time font-size" }] },
+        { "id": "V02", "dimension": "visual", "source": "检查表 视觉-走秒时数字不左右跳 / DESIGN §2.2", "description": "font-variant-numeric 含 tabular-nums；把 25:00、11:11、00:00、19:48、08:08 写入时间元素，元素宽度与每个字符的 x 位置完全相同", "assertions": [{ "type": "css_value", "selector": "[data-ui=time]", "property": "font-variant-numeric", "expected": "tabular-nums" }, { "type": "evaluate", "description": "各数字串下 width 极差 = 0" }] },
+        { "id": "V03", "dimension": "visual", "source": "检查表 视觉-跳过弱于主按钮 / DESIGN §4.4 §4.5", "description": "主按钮实心阶段色底、跳过透明底无边框、跳过字色为次要文字色、跳过字重 400 < 主按钮 500", "assertions": [{ "type": "css_value", "selector": "[data-ui=skip]", "property": "background-color", "expected": "rgba(0, 0, 0, 0)" }] },
+        { "id": "V04", "dimension": "visual", "source": "检查表 视觉-无持续循环动画 / DESIGN §1.2 原则 3", "description": "六种状态下 document.getAnimations() 中没有 CSSAnimation、没有无限迭代动画；样式表里没有 @keyframes", "assertions": [{ "type": "evaluate", "description": "无 CSSAnimation、无 iterations=Infinity" }] },
+        { "id": "V05", "dimension": "visual", "source": "检查表 视觉-布局符合结构图 / Feature Spec §二 / DESIGN §3.1", "description": "自上而下依次为阶段标签、剩余时间、状态说明、按钮行（主按钮在左、跳过在右并排）、今日完成数、底部提示区；五元素水平居中（中心线差 ≤ 1px）；无卡片、阴影、分割线", "assertions": [{ "type": "evaluate", "description": "y 坐标严格递增；|centerX − viewport/2| ≤ 1" }] },
+        { "id": "V06", "dimension": "visual", "source": "DESIGN §2.1 §2.2 §4.2 token 表", "description": "阶段标签：18px / 500 / 行高 27px；专注色 rgb(163,65,45)=#A3412D，休息色 rgb(59,104,112)=#3B6870", "assertions": [{ "type": "css_value", "selector": "[data-ui=phase]", "property": "font-size", "expected": "18px" }] },
+        { "id": "V07", "dimension": "visual", "source": "DESIGN §2.2 §4.1", "description": "剩余时间：桌面 128px / 300 / 行高 128px / 颜色 #22201C；窄于 600px 与矮于 480px 时 80px", "assertions": [{ "type": "css_value", "selector": "[data-ui=time]", "property": "font-size", "expected": "128px" }] },
+        { "id": "V08", "dimension": "visual", "source": "DESIGN §4.3 §5.3", "description": "状态说明：16px、颜色 #5F5A52、无字时仍占 24px 高、aria-live=polite；有无文字时按钮 y 不变", "assertions": [{ "type": "css_value", "selector": "[data-ui=status]", "property": "min-height", "expected": "24px" }] },
+        { "id": "V09", "dimension": "visual", "source": "DESIGN §4.4 token 表", "description": "主按钮：高 48、左右内距 32、圆角 8、16px / 500、字色 #FAF8F4、底色专注 #A3412D / 休息 #3B6870；悬停专注 #8A3524 / 休息 #30575E；transition 只含 background-color 120ms ease-out", "assertions": [{ "type": "css_value", "selector": "[data-ui=primary]", "property": "height", "expected": "48px" }] },
+        { "id": "V10", "dimension": "visual", "source": "DESIGN §4.5", "description": "跳过：高 48、左右内距 16、圆角 8、16px / 400、字色 #5F5A52、无底无边；悬停底 #F2EFE9、字 #22201C", "assertions": [{ "type": "css_value", "selector": "[data-ui=skip]", "property": "padding-left", "expected": "16px" }] },
+        { "id": "V11", "dimension": "visual", "source": "DESIGN §4.4 键盘焦点", "description": "键盘 Tab 聚焦主按钮 / 跳过：outline 2px solid rgb(34,32,28)，offset 2px；鼠标点击不出现焦点框（:focus-visible）", "assertions": [{ "type": "css_value", "selector": "[data-ui=primary]:focus-visible", "property": "outline", "expected": "2px solid rgb(34, 32, 28)" }] },
+        { "id": "V12", "dimension": "visual", "source": "DESIGN §4.6 §4.7", "description": "完成数整句 16px #5F5A52，数字 #22201C / 600 / tabular-nums；存储提示 14px #85561A 居中，窄屏折两行仍在底部提示区内", "assertions": [{ "type": "css_value", "selector": "[data-ui=count-num]", "property": "font-weight", "expected": "600" }] },
+        { "id": "V13", "dimension": "visual", "source": "DESIGN §3.1 token 表（间距）", "description": "阶段→时间 8、时间→状态 8、状态→按钮 32、两按钮间 16、按钮→完成数 48、内容列 ≤ 480、底部提示区 64 高、左右边距 24、页面背景 #FAF8F4、字体族首项 -apple-system", "assertions": [{ "type": "evaluate", "description": "相邻元素间距 = token 值（±0.5px）" }] },
+        { "id": "V14", "dimension": "visual", "source": "DESIGN §5.1「颜色和文字直接切换，无过渡」/ §1.2 原则 3「全页唯一的过渡是按钮悬停变色」/ 已知风险①", "description": "鼠标移开、等过渡结束后，专注到点切到休息的那一刻：主按钮底色不经过中间色（getAnimations 中没有 background-color 的 CSSTransition；切换后 0~150ms 内连续采样的计算底色只出现起点或终点两种值）；休息到点切回专注、点跳过切阶段同理", "assertions": [{ "type": "evaluate", "description": "无 CSSTransition(background-color)；采样色 ⊆ {#A3412D, #3B6870}" }] },
+        { "id": "V15", "dimension": "visual", "source": "DESIGN §5.2 减少动态效果", "description": "prefers-reduced-motion: reduce 时主按钮、跳过 transition-duration 为 0s / none", "assertions": [{ "type": "css_value", "selector": "[data-ui=primary]", "property": "transition-property", "expected": "none 或 duration 0s" }] },
+        { "id": "V16", "dimension": "visual", "source": "SKILL Phase 3 设计系统一致性：compare_impl.mjs（tokens.json implCheck）", "description": "骨架与真实页面 1440×900 下五个锚点位置尺寸误差 ≤ 2px", "assertions": [{ "type": "evaluate", "description": "compare_impl.mjs 退出码 0" }] },
+        { "id": "V17", "dimension": "visual", "source": "SKILL Phase 3 设计系统一致性：check_system.py 零件库守门", "description": "项目没有 docs/assets/visuals/system/system.tokens.json → 按 Skill 跳过并记录（不算通过）", "assertions": [{ "type": "evaluate", "description": "skip with reason" }] },
+        { "id": "V18", "dimension": "visual", "source": "DESIGN §1.3 视觉意图参考（Image 2 气质稿，不作 pass/fail）", "description": "真实截图与桌面 / 手机气质稿做定性对比：信息层级、密度、主操作、存储提示态是否同样安静；只写观察，不判通过", "assertions": [{ "type": "evaluate", "description": "INFO" }] }
+      ]
+    },
+    {
+      "id": "responsive",
+      "name": "Phase 3 响应式（R6）",
+      "phase": 3,
+      "priority": "P1",
+      "cases": [
+        { "id": "F22", "dimension": "responsive", "source": "检查表 R6 正常-手机竖屏 / ENGINEERING E14", "description": "375×812、390×844、768×1024：五个元素都在一屏内、无横向滚动、无纵向滚动、按钮 ≥ 44px 高且并排、剩余时间 80px（<600 宽）", "assertions": [{ "type": "evaluate", "description": "scrollWidth ≤ clientWidth；所有元素 bottom ≤ innerHeight" }] },
+        { "id": "F23", "dimension": "responsive", "source": "检查表 R6 边界-窄屏和横屏 / ENGINEERING E14", "description": "320×568、844×390、667×375、1440×900、1280×720：元素不重叠、不截断、剩余时间仍是最大文字；存储提示出现时窄屏折两行仍在底部提示区内；完成数两位数时仍居中；极端 568×320 横屏只记录（允许滚动但不得重叠截断）", "assertions": [{ "type": "evaluate", "description": "两两元素矩形不相交；scrollWidth ≤ clientWidth；文字无省略号截断" }] }
+      ]
+    },
+    {
+      "id": "a11y",
+      "name": "Phase 4 可访问性",
+      "phase": 4,
+      "priority": "P2",
+      "cases": [
+        { "id": "A01", "dimension": "accessibility", "source": "SKILL D7 axe-core WCAG 2 A/AA（本地 axe 4.11.1，经 addScriptTag 本地文件注入，不发外部请求）", "description": "专注待开始、专注已暂停、休息待开始（专注结束提示）、存储不可用四种状态：无 critical / serious 违规", "assertions": [{ "type": "evaluate", "description": "critical + serious === 0" }] },
+        { "id": "A02", "dimension": "accessibility", "source": "DESIGN §5.3 + Feature Spec 主按钮可键盘操作", "description": "Tab 依次聚焦主按钮、跳过；Enter / 空格激活主按钮开始与暂停；焦点停在 body 时按键只确认提醒、不开始计时", "assertions": [{ "type": "evaluate", "description": "Tab 顺序 = [primary, skip]；Enter 后主按钮文案变化" }] },
+        { "id": "A03", "dimension": "accessibility", "source": "DESIGN §5.3", "description": "html lang=zh-CN；viewport 不含 user-scalable=no / maximum-scale；剩余时间无 aria-live；状态说明 aria-live=polite；按钮都有可访问名称", "assertions": [{ "type": "has_attribute", "selector": "html", "attr": "lang", "value": "zh-CN" }] }
+      ]
+    },
+    {
+      "id": "manual",
+      "name": "只能真实环境验证（M 层）",
+      "phase": 4,
+      "priority": "P1",
+      "cases": [
+        { "id": "M1", "source": "ENGINEERING M1 / 检查表 R3 后台到点", "description": "见 F11（真实等待 + 近似）", "assertions": [{ "type": "evaluate", "description": "记录晚响程度" }] },
+        { "id": "M2", "source": "ENGINEERING M2 电脑睡眠唤醒", "description": "近似：真实时间里冻结页面（定时器全停、真实时钟照走）跨过结束时刻，再解冻，测解冻后多久完成到点处理、是否响铃；真实合盖睡眠由需求方手动验", "assertions": [{ "type": "evaluate", "description": "解冻后 ≤ 1 秒完成到点处理" }] },
+        { "id": "M3", "source": "ENGINEERING M3 手机真机锁屏 / 切出", "description": "本机无真机，无法自动验证；给需求方手动步骤", "assertions": [{ "type": "evaluate", "description": "无法自动验证" }] },
+        { "id": "M4", "source": "任务交接：声音是否真能听见", "description": "无头浏览器没有扬声器，只能证明合成了一声（频率 660Hz、峰值音量 0.1、约 0.8 秒）；是否听得见、是否安静由需求方试听", "assertions": [{ "type": "evaluate", "description": "无法自动验证" }] },
+        { "id": "M5", "source": "任务交接：Safari / Firefox", "description": "本机 WebKit 与 Firefox 内核版本和 Playwright 不匹配（WebKit 启动后协议不兼容、Firefox 未安装），不改环境；给需求方手动步骤", "assertions": [{ "type": "evaluate", "description": "无法自动验证" }] }
+      ]
+    }
+  ]
+}
