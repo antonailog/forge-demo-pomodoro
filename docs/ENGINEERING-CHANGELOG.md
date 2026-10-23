@@ -52,6 +52,12 @@ PRD v1.0 从零定义番茄钟网页（R1 计时与控制、R2 今日完成数�
 | `app.js` | 页面接线（ENGINEERING §三.3） |
 | `index.html` | 末尾加 `timer-core.js`、`app.js` 两个 `defer` 脚本 |
 
+### Bug 修复：BF-1023-1 切换阶段时主按钮直接换色（forge-bugfix）
+
+| 问题 | 修正 | 依据 |
+|---|---|---|
+| 到点或点跳过切换阶段时，主按钮底色走了一次 120ms 过渡（用户反馈「是慢慢变过去的」）；根因是悬停用的 `background-color` 过渡写在按钮常态上，换阶段改同一个属性也会触发，只改样式分不清两种变化（鼠标停在按钮上时到点仍会渐变） | `app.js`：`setAttr` 返回是否真的改了；`data-phase` 真正变化时让主按钮的 `background-color` 过渡立即走完，先判断浏览器有没有 `getAnimations`，不用 `try/catch`。`style.css` 只在文件头接口注释补写这条约定，样式规则不变。回归用例 `scripts/qa/phase-switch-color.mjs`（假时钟 + 冻结动画时间线，零真实等待） | DESIGN §5.1、§5.2；[BF-1023-1 报告](archive/raw/bugfix-reviews/BF-1023-1.md) |
+
 ### 上线前审查修正（forge-review）
 
 | 问题 | 修正 | 依据 |

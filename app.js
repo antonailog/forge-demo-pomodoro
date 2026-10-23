@@ -63,12 +63,19 @@
   }
 
   function setAttr(name, value) {
-    if (body.getAttribute(name) !== value) body.setAttribute(name, value);
+    if (body.getAttribute(name) === value) return false;
+    body.setAttribute(name, value);
+    return true;
   }
 
   function render(now) {
     const v = core.view(state, now);
-    setAttr('data-phase', v.phase);
+    if (setAttr('data-phase', v.phase) && typeof ui.primary.getAnimations === 'function') {
+      // 切阶段时让主按钮底色立即到位，普通悬停仍保留过渡（DESIGN §5.1）。
+      for (const animation of ui.primary.getAnimations()) {
+        if (animation.transitionProperty === 'background-color') animation.finish();
+      }
+    }
     setAttr('data-storage', storage === null ? 'off' : 'ok');
     setText(ui.phase, v.phaseLabel);
     setText(ui.time, v.time);

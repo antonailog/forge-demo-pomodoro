@@ -78,7 +78,7 @@ python3 -m http.server 4577 --bind 127.0.0.1   # APP_URL = http://127.0.0.1:4577
 
 - **单一状态源**：一个状态对象（当天完成数 + 当前段 + 未确认的到点提示），R1–R5 共用（PRD「关联变更」）。
 - **规则即纯函数**：所有状态变化都由 `timer-core.js` 算出「新状态 + 事件」，不修改传入对象；`app.js` 只负责把事件翻译成声音、把状态翻译成页面文字。
-- **样式与行为的接口**：照 `style.css` 文件头注释执行——只改 `body[data-phase]`（focus / break）、`body[data-storage]`（ok / off）、五处文字 `[data-ui=phase|time|status|primary|count-num]` 和 `document.title`；不加类名、不写内联样式。
+- **样式与行为的接口**：照 `style.css` 文件头注释执行——只改 `body[data-phase]`（focus / break）、`body[data-storage]`（ok / off）、五处文字 `[data-ui=phase|time|status|primary|count-num]` 和 `document.title`；不加类名、不写内联样式。阶段真正变化时，`render()` 让主按钮正在进行的 `background-color` 过渡立即走完（DESIGN §5.1「直接切换」；悬停过渡写在同一个属性上，样式层分不清两种变化），阶段不变的刷新不碰悬停过渡。
 
 ### 2.2 目录结构
 
@@ -341,4 +341,3 @@ now ≥ endAt（前台或后台，后台可能被浏览器推迟）
 | 页面层（`app.js`）的自动化单测 | 不引入 DOM 测试依赖（CONTEXT G3）；页面行为由 forge-qa 用浏览器实测 |
 | 提示音音色回填 DESIGN.md | DESIGN「待优化」中列了此项；本版参数记在 §三.3，回填由 forge-design 负责 |
 | 暗色模式、自定义时长、静音开关、快捷键、系统通知等 | Feature Spec 第六节非目标 / DESIGN 待优化 |
-| 到点切换阶段时主按钮底色有约 0.12 秒过渡（DESIGN §5.1 写「直接切换」） | 来自 `style.css` 给悬停用的 `background-color` 过渡，阶段切换也会触发；肉眼几乎不可见，已列入需求设计文档待拍板，改法归 forge-design-impl |

@@ -90,6 +90,10 @@
 > 已 resolved 或 wontfix 的条目归档到这里。**不清理**。
 > 以后遇到类似问题时可以在这里搜索历史。
 
+### 2026-10
+
+- **BF-1023-1** 到点或点跳过切换阶段时主按钮底色慢慢变过去、不是直接换掉 — resolved 2026-10-23 → Bug 修复验收报告 [docs/archive/raw/bugfix-reviews/BF-1023-1.md](../archive/raw/bugfix-reviews/BF-1023-1.md)
+
 ### 2026-04
 
 <!-- 按月分节。归档时追加到对应月份。-->
